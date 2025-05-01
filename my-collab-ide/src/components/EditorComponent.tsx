@@ -23,6 +23,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
     const [value, setValue] = useState<string | undefined>(defaultValue);
     const [activeFile, setActiveFile] = useState("App.js");
+
     const [activePanelTab, setActivePanelTab] = useState("终端");
 
     // 模拟文件结构数据
