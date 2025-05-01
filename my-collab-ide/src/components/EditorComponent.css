@@ -1,0 +1,275 @@
+/* 基础样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 主容器 */
+.ide-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    height: 100vh;
+    color: #cccccc;
+    background-color: #1e1e1e;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+}
+
+/* 活动栏 */
+.activity-bar {
+    width: 50px;
+    background-color: #252526;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+    z-index: 10;
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #858585;
+    cursor: pointer;
+}
+
+.activity-icon:hover {
+    color: #cccccc;
+}
+
+.activity-icon.active {
+    color: #ffffff;
+    border-left: 2px solid #ffffff;
+}
+
+.spacer {
+    flex: 1;
+}
+
+/* 侧边栏 */
+.sidebar {
+    width: 250px;
+    background-color: #252526;
+    border-right: 1px solid #3c3c3c;
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+    max-width: 400px;
+    resize: horizontal;
+    overflow: auto;
+}
+
+.sidebar-header {
+    padding: 10px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    background-color: #252526;
+    border-bottom: 1px solid #3c3c3c;
+}
+
+.sidebar-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.sidebar-actions span {
+    cursor: pointer;
+    color: #858585;
+}
+
+.sidebar-actions span:hover {
+    color: #cccccc;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow: auto;
+    padding: 5px 0;
+}
+
+.file-explorer {
+    padding-left: 5px;
+}
+
+.folder,
+.file {
+    padding: 3px 0;
+    cursor: pointer;
+}
+
+.folder-name {
+    display: flex;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.folder-name:hover,
+.file:hover {
+    background-color: #2a2a2a;
+}
+
+.folder-content {
+    padding-left: 16px;
+}
+
+.folder-icon {
+    margin-right: 4px;
+}
+
+/* 主体内容区域 */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #1e1e1e;
+    overflow: hidden;
+}
+
+/* 编辑器区域 */
+.editor-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.editor-tabs {
+    display: flex;
+    background-color: #252526;
+    border-bottom: 1px solid #3c3c3c;
+}
+
+.editor-tab {
+    padding: 8px 16px;
+    border-right: 1px solid #3c3c3c;
+    cursor: pointer;
+    background-color: #2d2d2d;
+}
+
+.editor-tab.active {
+    background-color: #1e1e1e;
+    border-top: 1px solid #007acc;
+}
+
+.editor-content {
+    flex: 1;
+    display: flex;
+    overflow: auto;
+}
+
+/* 面板区域 */
+.panel-area {
+    height: 200px;
+    background-color: #1e1e1e;
+    border-top: 1px solid #3c3c3c;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 100px;
+    max-height: 50vh;
+}
+
+.panel-tabs {
+    display: flex;
+    background-color: #252526;
+    border-bottom: 1px solid #3c3c3c;
+}
+
+.panel-tab {
+    padding: 5px 10px;
+    cursor: pointer;
+    border-right: 1px solid #3c3c3c;
+}
+
+.panel-tab.active {
+    background-color: #1e1e1e;
+    border-top: 1px solid #007acc;
+}
+
+.panel-content {
+    flex: 1;
+    overflow: auto;
+    padding: 5px;
+}
+
+.terminal {
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #c6c6c6;
+}
+
+.terminal-line {
+    padding: 2px 0;
+}
+
+.blink::after {
+    content: '▊';
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.panel-resizer {
+    height: 5px;
+    width: 100%;
+    cursor: ns-resize;
+    position: absolute;
+    top: 0;
+}
+
+/* 状态栏 */
+.status-bar {
+    height: 22px;
+    background-color: #007acc;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+    font-size: 12px;
+    line-height: 22px;
+    color: #ffffff;
+}
+
+.status-items-left,
+.status-items-right {
+    display: flex;
+}
+
+.status-item {
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .activity-bar {
+        width: 40px;
+    }
+}
+
+@media (max-width: 600px) {
+    .activity-bar {
+        width: 30px;
+    }
+
+    .activity-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+}
