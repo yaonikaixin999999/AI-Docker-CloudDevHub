@@ -11,8 +11,8 @@
     flex: 1;
     overflow: hidden;
     height: 100vh;
-    color: #cccccc;
-    background-color: #1e1e1e;
+    color: #333333;
+    background-color: #f5f9fc;
     font-family: 'Segoe UI', Arial, sans-serif;
     font-size: 13px;
 }
@@ -20,12 +20,13 @@
 /* 活动栏 */
 .activity-bar {
     width: 50px;
-    background-color: #252526;
+    background-color: #e1eaf2;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 8px 0;
     z-index: 10;
+    box-shadow: 1px 0 2px rgba(0, 0, 0, 0.05);
 }
 
 .activity-icon {
@@ -36,17 +37,20 @@
     align-items: center;
     margin-bottom: 10px;
     font-size: 18px;
-    color: #858585;
+    color: #6d8cb0;
     cursor: pointer;
+    border-radius: 4px;
 }
 
 .activity-icon:hover {
-    color: #cccccc;
+    color: #2b5989;
+    background-color: #d1e1f1;
 }
 
 .activity-icon.active {
-    color: #ffffff;
-    border-left: 2px solid #ffffff;
+    color: #2b5989;
+    background-color: #d1e1f1;
+    border-left: 2px solid #2b5989;
 }
 
 .spacer {
@@ -56,8 +60,8 @@
 /* 侧边栏 */
 .sidebar {
     width: 250px;
-    background-color: #252526;
-    border-right: 1px solid #3c3c3c;
+    background-color: #edf3f8;
+    border-right: 1px solid #d1e1f1;
     display: flex;
     flex-direction: column;
     min-width: 150px;
@@ -71,8 +75,9 @@
     font-weight: bold;
     display: flex;
     justify-content: space-between;
-    background-color: #252526;
-    border-bottom: 1px solid #3c3c3c;
+    background-color: #edf3f8;
+    border-bottom: 1px solid #d1e1f1;
+    color: #2b5989;
 }
 
 .sidebar-actions {
@@ -82,11 +87,11 @@
 
 .sidebar-actions span {
     cursor: pointer;
-    color: #858585;
+    color: #6d8cb0;
 }
 
 .sidebar-actions span:hover {
-    color: #cccccc;
+    color: #2b5989;
 }
 
 .sidebar-content {
@@ -103,6 +108,7 @@
 .file {
     padding: 3px 0;
     cursor: pointer;
+    color: #4a6f94;
 }
 
 .folder-name {
@@ -113,7 +119,8 @@
 
 .folder-name:hover,
 .file:hover {
-    background-color: #2a2a2a;
+    background-color: #d1e1f1;
+    border-radius: 3px;
 }
 
 .folder-content {
@@ -122,6 +129,7 @@
 
 .folder-icon {
     margin-right: 4px;
+    color: #6d8cb0;
 }
 
 /* 主体内容区域 */
@@ -129,8 +137,9 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: #1e1e1e;
+    background-color: #ffffff;
     overflow: hidden;
+    box-shadow: -1px 0 3px rgba(0, 0, 0, 0.05);
 }
 
 /* 编辑器区域 */
@@ -139,37 +148,45 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background-color: #ffffff;
 }
 
 .editor-tabs {
     display: flex;
-    background-color: #252526;
-    border-bottom: 1px solid #3c3c3c;
+    background-color: #edf3f8;
+    border-bottom: 1px solid #d1e1f1;
 }
 
 .editor-tab {
     padding: 8px 16px;
-    border-right: 1px solid #3c3c3c;
+    border-right: 1px solid #d1e1f1;
     cursor: pointer;
-    background-color: #2d2d2d;
+    background-color: #e1eaf2;
+    color: #4a6f94;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    margin-right: 2px;
+    margin-top: 2px;
 }
 
 .editor-tab.active {
-    background-color: #1e1e1e;
-    border-top: 1px solid #007acc;
+    background-color: #ffffff;
+    border-top: 2px solid #4a8cdf;
+    color: #2b5989;
 }
 
 .editor-content {
     flex: 1;
     display: flex;
     overflow: auto;
+    background-color: #ffffff;
 }
 
 /* 面板区域 */
 .panel-area {
     height: 200px;
-    background-color: #1e1e1e;
-    border-top: 1px solid #3c3c3c;
+    background-color: #f5f9fc;
+    border-top: 1px solid #d1e1f1;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -179,19 +196,21 @@
 
 .panel-tabs {
     display: flex;
-    background-color: #252526;
-    border-bottom: 1px solid #3c3c3c;
+    background-color: #edf3f8;
+    border-bottom: 1px solid #d1e1f1;
 }
 
 .panel-tab {
     padding: 5px 10px;
     cursor: pointer;
-    border-right: 1px solid #3c3c3c;
+    border-right: 1px solid #d1e1f1;
+    color: #4a6f94;
 }
 
 .panel-tab.active {
-    background-color: #1e1e1e;
-    border-top: 1px solid #007acc;
+    background-color: #f5f9fc;
+    border-top: 1px solid #4a8cdf;
+    color: #2b5989;
 }
 
 .panel-content {
@@ -202,7 +221,8 @@
 
 .terminal {
     font-family: 'Consolas', 'Courier New', monospace;
-    color: #c6c6c6;
+    color: #334455;
+    background-color: #f5f9fc;
 }
 
 .terminal-line {
@@ -212,6 +232,7 @@
 .blink::after {
     content: '▊';
     animation: blink 1s step-end infinite;
+    color: #4a8cdf;
 }
 
 @keyframes blink {
@@ -231,7 +252,7 @@
 /* 状态栏 */
 .status-bar {
     height: 22px;
-    background-color: #007acc;
+    background-color: #4a8cdf;
     display: flex;
     justify-content: space-between;
     padding: 0 10px;
@@ -262,6 +283,93 @@
     }
 }
 
+
+
+/* 让所有可拖动区域的边框更加明显，便于用户定位和拖拽 */
+.sidebar-resizer,
+.panel-resizer,
+.activity-bar-resizer {
+    position: absolute;
+    background-color: transparent;
+    transition: background-color 0.15s ease;
+    z-index: 10;
+}
+
+/* 侧边栏拖动控件 - 右侧边框 */
+.sidebar-resizer {
+    width: 8px;
+    height: 100%;
+    position: absolute;
+    right: -4px;
+    top: 0;
+    cursor: col-resize;
+}
+
+/* 活动栏拖动控件 - 右侧边框
+.activity-bar-resizer {
+    width: 8px;
+    height: 100%;
+    position: absolute;
+    right: -4px;
+    top: 0;
+    cursor: col-resize;
+} */
+
+/* 面板拖动控件 - 顶部边框 */
+.panel-resizer {
+    height: 8px;
+    width: 100%;
+    position: absolute;
+    top: -4px;
+    left: 0;
+    cursor: ns-resize;
+}
+
+/* 拖动时的视觉反馈 */
+.sidebar-resizer:hover,
+.sidebar-resizer:active,
+.activity-bar-resizer:hover,
+.activity-bar-resizer:active,
+.panel-resizer:hover,
+.panel-resizer:active {
+    background-color: rgba(74, 140, 223, 0.6);
+}
+
+/* 确保相对定位，以便调整大小控件可以正确定位 */
+.sidebar,
+.panel-area,
+.activity-bar {
+    position: relative;
+}
+
+/* 拖动时的遮罩层 */
+.resize-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background-color: transparent;
+}
+
+/* 根据拖动类型设置不同的光标 */
+.resize-overlay.dragging-sidebar,
+.resize-overlay.dragging-activity-bar {
+    cursor: col-resize;
+}
+
+.resize-overlay.dragging-panel {
+    cursor: ns-resize;
+}
+
+/* 确保布局正确 */
+.ide-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
 @media (max-width: 600px) {
     .activity-bar {
         width: 30px;
@@ -272,4 +380,25 @@
         height: 28px;
         font-size: 14px;
     }
+}
+
+.activity-icon img {
+    width: 24px;
+    /* 或者你想要的大小 */
+    height: 24px;
+    object-fit: contain;
+    /* 保持图片比例 */
+}
+
+/* 活动栏图标激活状态 */
+.activity-icon.active img {
+    filter: brightness(1.2);
+    /* 高亮显示激活的图标 */
+}
+
+/* 可选：为图标添加悬停效果 */
+.activity-icon:hover img {
+    transform: scale(1.1);
+    /* 悬停时稍微放大 */
+    transition: transform 0.2s ease;
 }
