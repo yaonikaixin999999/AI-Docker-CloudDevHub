@@ -516,10 +516,14 @@
     margin-bottom: 32px;
 }
 
+.ai-copilot-icon img.ai-copilot-logo-img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
 .ai-copilot-logo {
-    font-size: 48px;
     margin-bottom: 16px;
-    color: var(--primary-blue);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -529,6 +533,14 @@
     border-radius: 50%;
     margin-left: auto;
     margin-right: auto;
+    overflow: hidden;
+    /* 确保圆形裁剪生效 */
+}
+
+.ai-copilot-logo img.ai-copilot-main-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
 }
 
 .ai-copilot-info h2 {

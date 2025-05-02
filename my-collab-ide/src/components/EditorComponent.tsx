@@ -9,6 +9,7 @@ import gitIcon from '../icons/icons8-代码叉-40.png';
 import debugIcon from '../icons/icons8-播放-40.png';
 import extensionsIcon from '../icons/icons8-用户组-40.png';
 import settingsIcon from '../icons/icons8-设置-40.png';
+import copilotIcon from '../icons/icons8-windows副驾驶-240.png';
 
 interface EditorComponentProps {
     defaultLanguage?: string;
@@ -435,10 +436,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                     <div className="ai-copilot-header">
                         <div className="ai-copilot-title">
                             <div className="ai-copilot-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="10" fill="#4A8CDF" />
-                                    <path d="M12 6v12M6 12h12" stroke="white" strokeWidth="2" />
-                                </svg>
+                                <img src={copilotIcon} alt="Ask Copilot" className="ai-copilot-logo-img" />
                             </div>
                             <span>Ask Copilot</span>
                         </div>
@@ -446,7 +444,9 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
 
                     <div className="ai-copilot-content">
                         <div className="ai-copilot-info">
-                            <div className="ai-copilot-logo">⌘</div>
+                            <div className="ai-copilot-logo">
+                                <img src={copilotIcon} alt="Ask Copilot" className="ai-copilot-main-logo" />
+                            </div>
                             <h2>AI编程助手随时为您提供支持</h2>
                             <p>请在使用前仔细检查输出内容</p>
                         </div>

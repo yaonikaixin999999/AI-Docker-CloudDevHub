@@ -11,7 +11,7 @@ function App() {
       <EditorComponent
         onChange={handleCodeChange}
         defaultLanguage="typescript"
-        defaultValue="// TypeScript 代码编辑器\nconsole.log('Hello, World!');"
+        defaultValue="console.log('Hello, World!');"
       />
     </div>
   );
