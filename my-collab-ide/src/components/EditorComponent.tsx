@@ -3,12 +3,12 @@ import Editor, { OnMount } from '@monaco-editor/react';
 import { editor } from 'monaco-editor';
 import './EditorComponent.css';
 
-import explorerIcon from '../icons/icons8-文件夹-40.png';  // 资源管理器图标
-import searchIcon from '../icons/icons8-搜索-40.png';      // 搜索图标
-import gitIcon from '../icons/icons8-代码叉-40.png';            // 用户管理
-import debugIcon from '../icons/icons8-播放-40.png';        // 运行和调试图标
-import extensionsIcon from '../icons/icons8-用户组-40.png'; // 代码社区
-import settingsIcon from '../icons/icons8-设置-40.png';  // 设置图标
+import explorerIcon from '../icons/icons8-文件夹-40.png';
+import searchIcon from '../icons/icons8-搜索-40.png';
+import gitIcon from '../icons/icons8-代码叉-40.png';
+import debugIcon from '../icons/icons8-播放-40.png';
+import extensionsIcon from '../icons/icons8-用户组-40.png';
+import settingsIcon from '../icons/icons8-设置-40.png';
 
 interface EditorComponentProps {
     defaultLanguage?: string;
@@ -36,17 +36,21 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const [isDraggingActivityBar, setIsDraggingActivityBar] = useState(false);
     const [isDraggingSidebar, setIsDraggingSidebar] = useState(false);
     const [isDraggingPanel, setIsDraggingPanel] = useState(false);
+    const [isDraggingAIPanel, setIsDraggingAIPanel] = useState(false); // 新增: AI面板拖动状态
     const [activityBarWidth, setActivityBarWidth] = useState(50);
     const [sidebarWidth, setSidebarWidth] = useState(250);
     const [panelHeight, setPanelHeight] = useState(200);
+    const [aiPanelWidth, setAiPanelWidth] = useState(320); // 新增: AI面板宽度状态
 
     // 引用DOM元素
     const activityBarRef = useRef<HTMLDivElement>(null);
     const sidebarRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
+    const aiPanelRef = useRef<HTMLDivElement>(null); // 新增: AI面板元素引用
     const activityBarResizerRef = useRef<HTMLDivElement>(null);
     const sidebarResizerRef = useRef<HTMLDivElement>(null);
     const panelResizerRef = useRef<HTMLDivElement>(null);
+    const aiPanelResizerRef = useRef<HTMLDivElement>(null); // 新增: AI面板拖动控件引用
 
     // 模拟文件结构数据
     const fileStructure = {
@@ -95,6 +99,12 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         setIsDraggingPanel(true);
     };
 
+    // 新增: AI面板拖动处理函数
+    const handleAIPanelMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDraggingAIPanel(true);
+    };
+
     // 处理鼠标移动事件
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -126,16 +136,34 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                     setPanelHeight(newHeight);
                 }
             }
+
+            // 新增: AI面板宽度调整
+            if (isDraggingAIPanel) {
+                const container = document.querySelector('.ide-container');
+                if (container) {
+                    const containerRect = container.getBoundingClientRect();
+                    // 计算新宽度 (注意: 从右向左拖动，所以窗口宽度减去鼠标位置)
+                    const newWidth = Math.max(
+                        250,  // 最小宽度
+                        Math.min(
+                            500,  // 最大宽度
+                            containerRect.right - e.clientX
+                        )
+                    );
+                    setAiPanelWidth(newWidth);
+                }
+            }
         };
 
         const handleMouseUp = () => {
             setIsDraggingActivityBar(false);
             setIsDraggingSidebar(false);
             setIsDraggingPanel(false);
+            setIsDraggingAIPanel(false); // 新增: 清除AI面板拖动状态
         };
 
         // 任何拖动状态都添加事件监听
-        if (isDraggingActivityBar || isDraggingSidebar || isDraggingPanel) {
+        if (isDraggingActivityBar || isDraggingSidebar || isDraggingPanel || isDraggingAIPanel) {
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
         }
@@ -144,14 +172,21 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isDraggingActivityBar, isDraggingSidebar, isDraggingPanel, activityBarWidth, sidebarWidth]);
+    }, [
+        isDraggingActivityBar,
+        isDraggingSidebar,
+        isDraggingPanel,
+        isDraggingAIPanel, // 新增: AI面板拖动状态依赖
+        activityBarWidth,
+        sidebarWidth
+    ]);
 
     // 自动调整编辑器大小
     useEffect(() => {
         if (editorRef.current) {
             editorRef.current.layout();
         }
-    }, [activityBarWidth, sidebarWidth, panelHeight]);
+    }, [activityBarWidth, sidebarWidth, panelHeight, aiPanelWidth]); // 添加aiPanelWidth作为依赖
 
     // 生成行号
     const generateLineNumbers = () => {
@@ -167,7 +202,18 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         if (isDraggingActivityBar) return "resize-overlay dragging-activity-bar";
         if (isDraggingSidebar) return "resize-overlay dragging-sidebar";
         if (isDraggingPanel) return "resize-overlay dragging-panel";
+        if (isDraggingAIPanel) return "resize-overlay dragging-ai-panel"; // 新增: AI面板拖动类名
         return "resize-overlay";
+    };
+
+    // 文件图标辅助函数
+    const getFileIcon = (filename: string) => {
+        const ext = filename.split('.').pop()?.toLowerCase();
+        if (ext === 'js') return '📄';
+        if (ext === 'css') return '🎨';
+        if (ext === 'json') return '📋';
+        if (ext === 'md') return '📝';
+        return '📄';
     };
 
     return (
@@ -229,21 +275,37 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                                     <div className="folder">
                                         <div className="folder-name"><span className="folder-icon">▾</span> components</div>
                                         <div className="folder-content">
-                                            <div className="file" onClick={() => setActiveFile("Header.js")}>Header.js</div>
-                                            <div className="file" onClick={() => setActiveFile("Sidebar.js")}>Sidebar.js</div>
-                                            <div className="file" onClick={() => setActiveFile("Editor.js")}>Editor.js</div>
+                                            <div className="file" onClick={() => setActiveFile("Header.js")}>
+                                                <span className="file-icon">{getFileIcon('Header.js')}</span> Header.js
+                                            </div>
+                                            <div className="file" onClick={() => setActiveFile("Sidebar.js")}>
+                                                <span className="file-icon">{getFileIcon('Sidebar.js')}</span> Sidebar.js
+                                            </div>
+                                            <div className="file" onClick={() => setActiveFile("Editor.js")}>
+                                                <span className="file-icon">{getFileIcon('Editor.js')}</span> Editor.js
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="file" onClick={() => setActiveFile("App.js")}>App.js</div>
-                                    <div className="file" onClick={() => setActiveFile("index.js")}>index.js</div>
+                                    <div className="file" onClick={() => setActiveFile("App.js")}>
+                                        <span className="file-icon">{getFileIcon('App.js')}</span> App.js
+                                    </div>
+                                    <div className="file" onClick={() => setActiveFile("index.js")}>
+                                        <span className="file-icon">{getFileIcon('index.js')}</span> index.js
+                                    </div>
                                 </div>
                             </div>
                             <div className="folder">
                                 <div className="folder-name"><span className="folder-icon">▸</span> public</div>
                             </div>
-                            <div className="file" onClick={() => setActiveFile("package.json")}>package.json</div>
-                            <div className="file" onClick={() => setActiveFile("README.md")}>README.md</div>
-                            <div className="file" onClick={() => setActiveFile("style.css")}>style.css</div>
+                            <div className="file" onClick={() => setActiveFile("package.json")}>
+                                <span className="file-icon">{getFileIcon('package.json')}</span> package.json
+                            </div>
+                            <div className="file" onClick={() => setActiveFile("README.md")}>
+                                <span className="file-icon">{getFileIcon('README.md')}</span> README.md
+                            </div>
+                            <div className="file" onClick={() => setActiveFile("style.css")}>
+                                <span className="file-icon">{getFileIcon('style.css')}</span> style.css
+                            </div>
                         </div>
                     </div>
                     {/* 侧边栏调整大小控件 */}
@@ -261,12 +323,16 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                         <div className="editor-area" style={{ height: `calc(100% - ${panelHeight}px)` }}>
                             <div className="editor-tabs">
                                 <div className={`editor-tab ${activeFile === 'App.js' ? 'active' : ''}`}
-                                    onClick={() => setActiveFile("App.js")}>App.js</div>
+                                    onClick={() => setActiveFile("App.js")}>
+                                    <span className="file-icon">{getFileIcon('App.js')}</span> App.js
+                                </div>
                                 <div className={`editor-tab ${activeFile === 'style.css' ? 'active' : ''}`}
-                                    onClick={() => setActiveFile("style.css")}>style.css</div>
+                                    onClick={() => setActiveFile("style.css")}>
+                                    <span className="file-icon">{getFileIcon('style.css')}</span> style.css
+                                </div>
                             </div>
                             <div className="editor-content">
-                                {/* Monaco Editor 替代这里的代码区域 */}
+                                {/* Monaco Editor */}
                                 <Editor
                                     height="100%"
                                     width="100%"
@@ -285,7 +351,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                                         lineNumbers: 'on',
                                         roundedSelection: true,
                                         renderLineHighlight: 'gutter',
-                                        fontFamily: 'Consolas, "Courier New", monospace',
+                                        fontFamily: 'JetBrains Mono, Consolas, "Courier New", monospace',
                                         fontLigatures: true,
                                     }}
                                 />
@@ -328,21 +394,44 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                         {/* 状态栏 */}
                         <div className="status-bar">
                             <div className="status-items-left">
-                                <span className="status-item">⑂ main</span>
-                                <span className="status-item">✓ 0 ⚠︎ 0 ✖ 0</span>
+                                <span className="status-item status-branch">
+                                    <span className="status-icon">
+                                        <img src={gitIcon} alt="分支" className="status-git-icon" />
+                                    </span> main
+                                </span>
+                                <span className="status-item status-metrics">
+                                    <span className="warning">
+                                        <span role="img" aria-label="warning">⚠️</span> 0
+                                    </span>
+                                    <span className="error">
+                                        <span role="img" aria-label="error">❌</span> 0
+                                    </span>
+                                </span>
                             </div>
                             <div className="status-items-right">
                                 <span className="status-item">UTF-8</span>
                                 <span className="status-item">LF</span>
                                 <span className="status-item">{ } {defaultLanguage}</span>
-                                <span className="status-item">Ln 1, Col 1</span>
+                                <span className="status-item status-position">Ln 1, Col 1</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* AI助手面板 - 位于右侧 */}
-                <div className="ai-copilot-panel">
+                <div
+                    className="ai-copilot-panel"
+                    ref={aiPanelRef}
+                    style={{ width: `${aiPanelWidth}px` }}
+                >
+                    {/* 新增: AI面板拖动控件 */}
+                    <div
+                        className="ai-panel-resizer"
+                        ref={aiPanelResizerRef}
+                        onMouseDown={handleAIPanelMouseDown}
+                        title="拖动调整AI面板宽度"
+                    ></div>
+
                     <div className="ai-copilot-header">
                         <div className="ai-copilot-title">
                             <div className="ai-copilot-icon">
@@ -358,8 +447,8 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                     <div className="ai-copilot-content">
                         <div className="ai-copilot-info">
                             <div className="ai-copilot-logo">⌘</div>
-                            <h2>Copilot is powered by AI, so mistakes are possible.</h2>
-                            <p>Review output carefully before use.</p>
+                            <h2>AI编程助手随时为您提供支持</h2>
+                            <p>请在使用前仔细检查输出内容</p>
                         </div>
 
                         <div className="ai-copilot-actions">
@@ -383,7 +472,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
             </div>
 
             {/* 指示器显示当前正在拖动的覆盖层 */}
-            {(isDraggingSidebar || isDraggingPanel || isDraggingActivityBar) && (
+            {(isDraggingSidebar || isDraggingPanel || isDraggingActivityBar || isDraggingAIPanel) && (
                 <div className={getOverlayClassName()}></div>
             )}
         </div>

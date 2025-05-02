@@ -5,28 +5,47 @@
     box-sizing: border-box;
 }
 
+/* 变量定义 - 高质感淡蓝白色主题 */
+:root {
+    --primary-blue: #2b6cb0;
+    --primary-light: #ebf4ff;
+    --primary-dark: #2c5282;
+    --accent-blue: #3182ce;
+    --surface-lightest: #ffffff;
+    --surface-light: #f7fafc;
+    --surface-mid: #edf2f7;
+    --surface-dark: #e2e8f0;
+    --text-dark: #2d3748;
+    --text-mid: #4a5568;
+    --text-light: #718096;
+    --border-light: #e2e8f0;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --transition-default: all 0.2s ease;
+}
+
 /* 主容器 */
 .ide-container {
     display: flex;
     flex: 1;
     overflow: hidden;
     height: 100vh;
-    color: #333333;
-    background-color: #f5f9fc;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    color: var(--text-dark);
+    background-color: var(--surface-light);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
     font-size: 13px;
 }
 
 /* 活动栏 */
 .activity-bar {
     width: 50px;
-    background-color: #e1eaf2;
+    background-color: var(--surface-mid);
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 8px 0;
     z-index: 10;
-    box-shadow: 1px 0 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
 }
 
 .activity-icon {
@@ -37,20 +56,21 @@
     align-items: center;
     margin-bottom: 10px;
     font-size: 18px;
-    color: #6d8cb0;
+    color: var(--text-light);
     cursor: pointer;
     border-radius: 4px;
+    transition: var(--transition-default);
 }
 
 .activity-icon:hover {
-    color: #2b5989;
-    background-color: #d1e1f1;
+    color: var(--primary-blue);
+    background-color: var(--primary-light);
 }
 
 .activity-icon.active {
-    color: #2b5989;
-    background-color: #d1e1f1;
-    border-left: 2px solid #2b5989;
+    color: var(--primary-blue);
+    background-color: var(--primary-light);
+    border-left: 2px solid var(--primary-blue);
 }
 
 .spacer {
@@ -60,8 +80,8 @@
 /* 侧边栏 */
 .sidebar {
     width: 250px;
-    background-color: #edf3f8;
-    border-right: 1px solid #d1e1f1;
+    background-color: var(--surface-light);
+    border-right: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
     min-width: 150px;
@@ -75,9 +95,9 @@
     font-weight: bold;
     display: flex;
     justify-content: space-between;
-    background-color: #edf3f8;
-    border-bottom: 1px solid #d1e1f1;
-    color: #2b5989;
+    background-color: var(--surface-light);
+    border-bottom: 1px solid var(--border-light);
+    color: var(--primary-dark);
 }
 
 .sidebar-actions {
@@ -87,11 +107,11 @@
 
 .sidebar-actions span {
     cursor: pointer;
-    color: #6d8cb0;
+    color: var(--text-light);
 }
 
 .sidebar-actions span:hover {
-    color: #2b5989;
+    color: var(--primary-blue);
 }
 
 .sidebar-content {
@@ -108,7 +128,7 @@
 .file {
     padding: 3px 0;
     cursor: pointer;
-    color: #4a6f94;
+    color: var(--text-mid);
 }
 
 .folder-name {
@@ -119,7 +139,7 @@
 
 .folder-name:hover,
 .file:hover {
-    background-color: #d1e1f1;
+    background-color: var(--surface-mid);
     border-radius: 3px;
 }
 
@@ -129,7 +149,7 @@
 
 .folder-icon {
     margin-right: 4px;
-    color: #6d8cb0;
+    color: var(--text-light);
 }
 
 /* 主体内容区域 */
@@ -137,9 +157,9 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: #ffffff;
+    background-color: var(--surface-lightest);
     overflow: hidden;
-    box-shadow: -1px 0 3px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
 }
 
 /* 编辑器区域 */
@@ -148,45 +168,46 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background-color: #ffffff;
+    background-color: var(--surface-lightest);
 }
 
 .editor-tabs {
     display: flex;
-    background-color: #edf3f8;
-    border-bottom: 1px solid #d1e1f1;
+    background-color: var(--surface-light);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .editor-tab {
     padding: 8px 16px;
-    border-right: 1px solid #d1e1f1;
+    border-right: 1px solid var(--border-light);
     cursor: pointer;
-    background-color: #e1eaf2;
-    color: #4a6f94;
+    background-color: var(--surface-mid);
+    color: var(--text-mid);
     border-top-left-radius: 3px;
     border-top-right-radius: 3px;
     margin-right: 2px;
     margin-top: 2px;
+    transition: var(--transition-default);
 }
 
 .editor-tab.active {
-    background-color: #ffffff;
-    border-top: 2px solid #4a8cdf;
-    color: #2b5989;
+    background-color: var(--surface-lightest);
+    border-top: 2px solid var(--primary-blue);
+    color: var(--primary-dark);
 }
 
 .editor-content {
     flex: 1;
     display: flex;
     overflow: auto;
-    background-color: #ffffff;
+    background-color: var(--surface-lightest);
 }
 
 /* 面板区域 */
 .panel-area {
     height: 200px;
-    background-color: #f5f9fc;
-    border-top: 1px solid #d1e1f1;
+    background-color: var(--surface-light);
+    border-top: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -196,21 +217,22 @@
 
 .panel-tabs {
     display: flex;
-    background-color: #edf3f8;
-    border-bottom: 1px solid #d1e1f1;
+    background-color: var(--surface-mid);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .panel-tab {
     padding: 5px 10px;
     cursor: pointer;
-    border-right: 1px solid #d1e1f1;
-    color: #4a6f94;
+    border-right: 1px solid var(--border-light);
+    color: var(--text-mid);
+    transition: var(--transition-default);
 }
 
 .panel-tab.active {
-    background-color: #f5f9fc;
-    border-top: 1px solid #4a8cdf;
-    color: #2b5989;
+    background-color: var(--surface-light);
+    border-top: 1px solid var(--primary-blue);
+    color: var(--primary-dark);
 }
 
 .panel-content {
@@ -220,9 +242,9 @@
 }
 
 .terminal {
-    font-family: 'Consolas', 'Courier New', monospace;
-    color: #334455;
-    background-color: #f5f9fc;
+    font-family: 'Cascadia Code', 'JetBrains Mono', 'Consolas', 'Courier New', monospace;
+    color: var(--text-dark);
+    background-color: var(--surface-light);
 }
 
 .terminal-line {
@@ -232,7 +254,7 @@
 .blink::after {
     content: '▊';
     animation: blink 1s step-end infinite;
-    color: #4a8cdf;
+    color: var(--accent-blue);
 }
 
 @keyframes blink {
@@ -252,26 +274,78 @@
 /* 状态栏 */
 .status-bar {
     height: 22px;
-    background-color: #4a8cdf;
+    background-color: var(--primary-blue);
+    background-image: linear-gradient(to right, var(--primary-blue), var(--accent-blue));
     display: flex;
     justify-content: space-between;
     padding: 0 10px;
     font-size: 12px;
     line-height: 22px;
-    color: #ffffff;
+    color: var(--surface-lightest);
     position: relative;
     z-index: 2;
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .status-items-left,
 .status-items-right {
     display: flex;
+    align-items: center;
 }
 
 .status-item {
     padding: 0 8px;
     display: flex;
     align-items: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    height: 22px;
+    transition: background-color 0.2s;
+}
+
+.status-item:last-child {
+    border-right: none;
+}
+
+.status-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.status-icon {
+    margin-right: 4px;
+    font-size: 12px;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+}
+
+/* 状态信息类别的不同样式 */
+.status-branch {
+    font-weight: 500;
+}
+
+.status-metrics {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+}
+
+.status-metrics .warning {
+    color: #ffcc00;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.status-metrics .error {
+    color: #ff6b6b;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.status-position {
+    font-family: 'Consolas', monospace;
 }
 
 /* 响应式设计 */
@@ -299,26 +373,15 @@
 
 /* 让所有可拖动区域的边框更加明显，便于用户定位和拖拽 */
 .sidebar-resizer,
-.panel-resizer,
-.activity-bar-resizer {
+.panel-resizer {
     position: absolute;
     background-color: transparent;
-    transition: background-color 0.15s ease;
+    transition: var(--transition-default);
     z-index: 10;
 }
 
 /* 侧边栏拖动控件 - 右侧边框 */
 .sidebar-resizer {
-    width: 8px;
-    height: 100%;
-    position: absolute;
-    right: -4px;
-    top: 0;
-    cursor: col-resize;
-}
-
-/* 活动栏拖动控件 - 右侧边框 */
-.activity-bar-resizer {
     width: 8px;
     height: 100%;
     position: absolute;
@@ -340,11 +403,9 @@
 /* 拖动时的视觉反馈 */
 .sidebar-resizer:hover,
 .sidebar-resizer:active,
-.activity-bar-resizer:hover,
-.activity-bar-resizer:active,
 .panel-resizer:hover,
 .panel-resizer:active {
-    background-color: rgba(74, 140, 223, 0.6);
+    background-color: rgba(49, 130, 206, 0.6);
 }
 
 /* 确保相对定位，以便调整大小控件可以正确定位 */
@@ -379,6 +440,7 @@
     width: 24px;
     height: 24px;
     object-fit: contain;
+    transition: var(--transition-default);
 }
 
 /* 活动栏图标激活状态 */
@@ -389,7 +451,6 @@
 /* 可选：为图标添加悬停效果 */
 .activity-icon:hover img {
     transform: scale(1.1);
-    transition: transform 0.2s ease;
 }
 
 /* 主布局容器，使用flex布局 */
@@ -413,8 +474,8 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    background-color: #f5f9fc;
-    border-left: 1px solid #d1e1f1;
+    background-color: var(--surface-light);
+    border-left: 1px solid var(--border-light);
     overflow: hidden;
 }
 
@@ -423,8 +484,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #d1e1f1;
-    background-color: #edf3f8;
+    border-bottom: 1px solid var(--border-light);
+    background-color: var(--surface-mid);
 }
 
 .ai-copilot-title {
@@ -432,11 +493,11 @@
     align-items: center;
     gap: 8px;
     font-weight: 600;
-    color: #2b5989;
+    color: var(--primary-dark);
 }
 
 .ai-copilot-icon svg circle {
-    fill: #4a8cdf;
+    fill: var(--primary-blue);
 }
 
 .ai-copilot-content {
@@ -447,7 +508,7 @@
     justify-content: center;
     align-items: center;
     overflow-y: auto;
-    background-color: #f9fcff;
+    background-color: var(--surface-lightest);
 }
 
 .ai-copilot-info {
@@ -458,19 +519,28 @@
 .ai-copilot-logo {
     font-size: 48px;
     margin-bottom: 16px;
-    color: #4a8cdf;
+    color: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 64px;
+    width: 64px;
+    background-color: var(--primary-light);
+    border-radius: 50%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .ai-copilot-info h2 {
     font-size: 16px;
     font-weight: normal;
-    color: #4a6f94;
+    color: var(--text-mid);
     margin-bottom: 8px;
 }
 
 .ai-copilot-info p {
     font-size: 14px;
-    color: #6d8cb0;
+    color: var(--text-light);
 }
 
 .ai-copilot-actions {
@@ -487,17 +557,17 @@
     gap: 8px;
     padding: 8px 16px;
     border-radius: 4px;
-    background-color: #ffffff;
-    border: 1px solid #d1e1f1;
+    background-color: var(--surface-lightest);
+    border: 1px solid var(--border-light);
     cursor: pointer;
     text-align: left;
-    transition: background-color 0.2s, border-color 0.2s;
-    color: #4a6f94;
+    transition: var(--transition-default);
+    color: var(--text-mid);
 }
 
 .ai-copilot-action:hover {
-    background-color: #edf3f8;
-    border-color: #4a8cdf;
+    background-color: var(--primary-light);
+    border-color: var(--primary-blue);
 }
 
 .ai-action-icon {
@@ -510,21 +580,81 @@
 }
 
 .ai-input-container {
-    border: 1px solid #d1e1f1;
+    border: 1px solid var(--border-light);
     border-radius: 4px;
     padding: 8px 16px;
     cursor: text;
     display: flex;
     align-items: center;
-    background-color: #ffffff;
+    background-color: var(--surface-lightest);
+    transition: var(--transition-default);
 }
 
 .ai-input-container:hover,
 .ai-input-container:focus-within {
-    border-color: #4a8cdf;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 1px rgba(49, 130, 206, 0.1);
 }
 
 .ai-input-placeholder {
-    color: #6d8cb0;
+    color: var(--text-light);
     font-size: 14px;
+}
+
+/* 以下是文件图标样式 */
+.file-icon {
+    margin-right: 5px;
+}
+
+/* AI助手面板调整 - 淡蓝白色主题 */
+.ai-copilot-panel {
+    width: 320px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--surface-light);
+    border-left: 1px solid var(--border-light);
+    overflow: hidden;
+    position: relative;
+    /* 添加相对定位以便放置拖动控件 */
+    min-width: 250px;
+    /* 添加最小宽度限制 */
+    max-width: 500px;
+    /* 添加最大宽度限制 */
+    transition: width 0.1s ease;
+    /* 让宽度变化更平滑 */
+}
+
+/* 新增：AI面板拖动控件 - 左侧边框 */
+.ai-panel-resizer {
+    width: 8px;
+    height: 100%;
+    position: absolute;
+    left: -4px;
+    /* 居中放置，使用户能更容易点击到 */
+    top: 0;
+    cursor: col-resize;
+    background-color: transparent;
+    transition: var(--transition-default);
+    z-index: 10;
+}
+
+/* 拖动时的视觉反馈 */
+.ai-panel-resizer:hover,
+.ai-panel-resizer:active {
+    background-color: rgba(49, 130, 206, 0.6);
+}
+
+/* 修改拖动遮罩层，添加ai面板拖动状态 */
+.resize-overlay.dragging-ai-panel {
+    cursor: col-resize;
+}
+
+.status-git-icon {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    vertical-align: middle;
+    filter: brightness(5);
+    /* 使图标在深色背景上更明显 */
 }
