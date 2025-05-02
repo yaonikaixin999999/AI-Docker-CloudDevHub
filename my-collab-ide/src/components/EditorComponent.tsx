@@ -172,169 +172,213 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
 
     return (
         <div className="ide-container">
-            {/* 活动栏 */}
-            <div
-                className="activity-bar"
-                ref={activityBarRef}
-                style={{ width: `${activityBarWidth}px` }}
-            >
-                <div className="activity-icon active" title="资源管理器">
-                    <img src={explorerIcon} alt="资源管理器" />
-                </div>
-                <div className="activity-icon" title="搜索">
-                    <img src={searchIcon} alt="搜索" />
-                </div>
-                <div className="activity-icon" title="用户管理">
-                    <img src={gitIcon} alt="用户管理" />
-                </div>
-                <div className="activity-icon" title="运行和调试">
-                    <img src={debugIcon} alt="运行和调试" />
-                </div>
-                <div className="activity-icon" title="代码社区">
-                    <img src={extensionsIcon} alt="代码社区" />
-                </div>
-                <div className="spacer"></div>
-                <div className="activity-icon" title="设置">
-                    <img src={settingsIcon} alt="设置" />
-                </div>
-
-                {/* 活动栏调整大小控件 */}
+            <div className="ide-main-layout">
+                {/* 活动栏 */}
                 <div
-                    className="activity-bar-resizer"
-                    ref={activityBarResizerRef}
-                    onMouseDown={handleActivityBarMouseDown}
-                ></div>
-            </div>
-
-            {/* 侧边栏 */}
-            <div
-                className="sidebar"
-                ref={sidebarRef}
-                style={{ width: `${sidebarWidth}px` }}
-            >
-                <div className="sidebar-header">
-                    <div>资源管理器</div>
-                    <div className="sidebar-actions">
-                        <span title="新建文件">+</span>
-                        <span title="刷新">↻</span>
-                        <span title="折叠所有">⊟</span>
+                    className="activity-bar"
+                    ref={activityBarRef}
+                    style={{ width: `${activityBarWidth}px` }}
+                >
+                    <div className="activity-icon active" title="资源管理器">
+                        <img src={explorerIcon} alt="资源管理器" />
                     </div>
+                    <div className="activity-icon" title="搜索">
+                        <img src={searchIcon} alt="搜索" />
+                    </div>
+                    <div className="activity-icon" title="用户管理">
+                        <img src={gitIcon} alt="用户管理" />
+                    </div>
+                    <div className="activity-icon" title="运行和调试">
+                        <img src={debugIcon} alt="运行和调试" />
+                    </div>
+                    <div className="activity-icon" title="代码社区">
+                        <img src={extensionsIcon} alt="代码社区" />
+                    </div>
+                    <div className="spacer"></div>
+                    <div className="activity-icon" title="设置">
+                        <img src={settingsIcon} alt="设置" />
+                    </div>
+
+                    {/* 活动栏调整大小控件 */}
+                    <div
+                        className="activity-bar-resizer"
+                        ref={activityBarResizerRef}
+                        onMouseDown={handleActivityBarMouseDown}
+                    ></div>
                 </div>
-                <div className="sidebar-content">
-                    <div className="file-explorer">
-                        <div className="folder">
-                            <div className="folder-name"><span className="folder-icon">▾</span> src</div>
-                            <div className="folder-content">
-                                <div className="folder">
-                                    <div className="folder-name"><span className="folder-icon">▾</span> components</div>
-                                    <div className="folder-content">
-                                        <div className="file" onClick={() => setActiveFile("Header.js")}>Header.js</div>
-                                        <div className="file" onClick={() => setActiveFile("Sidebar.js")}>Sidebar.js</div>
-                                        <div className="file" onClick={() => setActiveFile("Editor.js")}>Editor.js</div>
+
+                {/* 侧边栏 */}
+                <div
+                    className="sidebar"
+                    ref={sidebarRef}
+                    style={{ width: `${sidebarWidth}px` }}
+                >
+                    <div className="sidebar-header">
+                        <div>资源管理器</div>
+                        <div className="sidebar-actions">
+                            <span title="新建文件">+</span>
+                            <span title="刷新">↻</span>
+                            <span title="折叠所有">⊟</span>
+                        </div>
+                    </div>
+                    <div className="sidebar-content">
+                        <div className="file-explorer">
+                            <div className="folder">
+                                <div className="folder-name"><span className="folder-icon">▾</span> src</div>
+                                <div className="folder-content">
+                                    <div className="folder">
+                                        <div className="folder-name"><span className="folder-icon">▾</span> components</div>
+                                        <div className="folder-content">
+                                            <div className="file" onClick={() => setActiveFile("Header.js")}>Header.js</div>
+                                            <div className="file" onClick={() => setActiveFile("Sidebar.js")}>Sidebar.js</div>
+                                            <div className="file" onClick={() => setActiveFile("Editor.js")}>Editor.js</div>
+                                        </div>
                                     </div>
+                                    <div className="file" onClick={() => setActiveFile("App.js")}>App.js</div>
+                                    <div className="file" onClick={() => setActiveFile("index.js")}>index.js</div>
                                 </div>
-                                <div className="file" onClick={() => setActiveFile("App.js")}>App.js</div>
-                                <div className="file" onClick={() => setActiveFile("index.js")}>index.js</div>
+                            </div>
+                            <div className="folder">
+                                <div className="folder-name"><span className="folder-icon">▸</span> public</div>
+                            </div>
+                            <div className="file" onClick={() => setActiveFile("package.json")}>package.json</div>
+                            <div className="file" onClick={() => setActiveFile("README.md")}>README.md</div>
+                            <div className="file" onClick={() => setActiveFile("style.css")}>style.css</div>
+                        </div>
+                    </div>
+                    {/* 侧边栏调整大小控件 */}
+                    <div
+                        className="sidebar-resizer"
+                        ref={sidebarResizerRef}
+                        onMouseDown={handleSidebarMouseDown}
+                    ></div>
+                </div>
+
+                {/* 主体区域和编辑器部分 */}
+                <div className="editor-and-panel-container">
+                    <div className="main-content">
+                        {/* 编辑器区域 */}
+                        <div className="editor-area" style={{ height: `calc(100% - ${panelHeight}px)` }}>
+                            <div className="editor-tabs">
+                                <div className={`editor-tab ${activeFile === 'App.js' ? 'active' : ''}`}
+                                    onClick={() => setActiveFile("App.js")}>App.js</div>
+                                <div className={`editor-tab ${activeFile === 'style.css' ? 'active' : ''}`}
+                                    onClick={() => setActiveFile("style.css")}>style.css</div>
+                            </div>
+                            <div className="editor-content">
+                                {/* Monaco Editor 替代这里的代码区域 */}
+                                <Editor
+                                    height="100%"
+                                    width="100%"
+                                    defaultLanguage={defaultLanguage}
+                                    defaultValue={defaultValue}
+                                    value={value}
+                                    theme={theme}
+                                    onMount={handleEditorDidMount}
+                                    onChange={handleEditorChange}
+                                    options={{
+                                        minimap: { enabled: true },
+                                        scrollBeyondLastLine: false,
+                                        fontSize: 14,
+                                        wordWrap: 'on',
+                                        automaticLayout: true,
+                                        lineNumbers: 'on',
+                                        roundedSelection: true,
+                                        renderLineHighlight: 'gutter',
+                                        fontFamily: 'Consolas, "Courier New", monospace',
+                                        fontLigatures: true,
+                                    }}
+                                />
                             </div>
                         </div>
-                        <div className="folder">
-                            <div className="folder-name"><span className="folder-icon">▸</span> public</div>
+
+                        {/* 面板区域 */}
+                        <div
+                            className="panel-area"
+                            ref={panelRef}
+                            style={{ height: `${panelHeight}px` }}
+                        >
+                            {/* 面板调整大小控件 */}
+                            <div
+                                className="panel-resizer"
+                                ref={panelResizerRef}
+                                onMouseDown={handlePanelMouseDown}
+                            ></div>
+                            <div className="panel-tabs">
+                                <div className={`panel-tab ${activePanelTab === '终端' ? 'active' : ''}`}
+                                    onClick={() => setActivePanelTab("终端")}>终端</div>
+                                <div className={`panel-tab ${activePanelTab === '问题' ? 'active' : ''}`}
+                                    onClick={() => setActivePanelTab("问题")}>问题</div>
+                                <div className={`panel-tab ${activePanelTab === '输出' ? 'active' : ''}`}
+                                    onClick={() => setActivePanelTab("输出")}>输出</div>
+                                <div className={`panel-tab ${activePanelTab === '调试控制台' ? 'active' : ''}`}
+                                    onClick={() => setActivePanelTab("调试控制台")}>调试控制台</div>
+                            </div>
+                            <div className="panel-content">
+                                <div className="terminal">
+                                    <div className="terminal-line">$ npm start</div>
+                                    <div className="terminal-line">启动开发服务器...</div>
+                                    <div className="terminal-line">编译完成，无错误。</div>
+                                    <div className="terminal-line">应用运行在 http://localhost:3000</div>
+                                    <div className="terminal-line blink">$</div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="file" onClick={() => setActiveFile("package.json")}>package.json</div>
-                        <div className="file" onClick={() => setActiveFile("README.md")}>README.md</div>
-                        <div className="file" onClick={() => setActiveFile("style.css")}>style.css</div>
-                    </div>
-                </div>
-                {/* 侧边栏调整大小控件 */}
-                <div
-                    className="sidebar-resizer"
-                    ref={sidebarResizerRef}
-                    onMouseDown={handleSidebarMouseDown}
-                ></div>
-            </div>
 
-            {/* 主体区域 */}
-            <div className="main-content">
-                {/* 编辑器区域 */}
-                <div className="editor-area" style={{ height: `calc(100% - ${panelHeight}px)` }}>
-                    <div className="editor-tabs">
-                        <div className={`editor-tab ${activeFile === 'App.js' ? 'active' : ''}`}
-                            onClick={() => setActiveFile("App.js")}>App.js</div>
-                        <div className={`editor-tab ${activeFile === 'style.css' ? 'active' : ''}`}
-                            onClick={() => setActiveFile("style.css")}>style.css</div>
-                    </div>
-                    <div className="editor-content">
-                        {/* Monaco Editor 替代这里的代码区域 */}
-                        <Editor
-                            height="100%"
-                            width="100%"
-                            defaultLanguage={defaultLanguage}
-                            defaultValue={defaultValue}
-                            value={value}
-                            theme={theme}
-                            onMount={handleEditorDidMount}
-                            onChange={handleEditorChange}
-                            options={{
-                                minimap: { enabled: true },
-                                scrollBeyondLastLine: false,
-                                fontSize: 14,
-                                wordWrap: 'on',
-                                automaticLayout: true,
-                                lineNumbers: 'on',
-                                roundedSelection: true,
-                                renderLineHighlight: 'gutter',
-                                fontFamily: 'Consolas, "Courier New", monospace',
-                                fontLigatures: true,
-                            }}
-                        />
-                    </div>
-                </div>
-
-                {/* 面板区域 */}
-                <div
-                    className="panel-area"
-                    ref={panelRef}
-                    style={{ height: `${panelHeight}px` }}
-                >
-                    {/* 面板调整大小控件 */}
-                    <div
-                        className="panel-resizer"
-                        ref={panelResizerRef}
-                        onMouseDown={handlePanelMouseDown}
-                    ></div>
-                    <div className="panel-tabs">
-                        <div className={`panel-tab ${activePanelTab === '终端' ? 'active' : ''}`}
-                            onClick={() => setActivePanelTab("终端")}>终端</div>
-                        <div className={`panel-tab ${activePanelTab === '问题' ? 'active' : ''}`}
-                            onClick={() => setActivePanelTab("问题")}>问题</div>
-                        <div className={`panel-tab ${activePanelTab === '输出' ? 'active' : ''}`}
-                            onClick={() => setActivePanelTab("输出")}>输出</div>
-                        <div className={`panel-tab ${activePanelTab === '调试控制台' ? 'active' : ''}`}
-                            onClick={() => setActivePanelTab("调试控制台")}>调试控制台</div>
-                    </div>
-                    <div className="panel-content">
-                        <div className="terminal">
-                            <div className="terminal-line">$ npm start</div>
-                            <div className="terminal-line">启动开发服务器...</div>
-                            <div className="terminal-line">编译完成，无错误。</div>
-                            <div className="terminal-line">应用运行在 http://localhost:3000</div>
-                            <div className="terminal-line blink">$</div>
+                        {/* 状态栏 */}
+                        <div className="status-bar">
+                            <div className="status-items-left">
+                                <span className="status-item">⑂ main</span>
+                                <span className="status-item">✓ 0 ⚠︎ 0 ✖ 0</span>
+                            </div>
+                            <div className="status-items-right">
+                                <span className="status-item">UTF-8</span>
+                                <span className="status-item">LF</span>
+                                <span className="status-item">{ } {defaultLanguage}</span>
+                                <span className="status-item">Ln 1, Col 1</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* 状态栏 */}
-            <div className="status-bar">
-                <div className="status-items-left">
-                    <span className="status-item">⑂ main</span>
-                    <span className="status-item">✓ 0 ⚠︎ 0 ✖ 0</span>
-                </div>
-                <div className="status-items-right">
-                    <span className="status-item">UTF-8</span>
-                    <span className="status-item">LF</span>
-                    <span className="status-item">{ } {defaultLanguage}</span>
-                    <span className="status-item">Ln 1, Col 1</span>
+                {/* AI助手面板 - 位于右侧 */}
+                <div className="ai-copilot-panel">
+                    <div className="ai-copilot-header">
+                        <div className="ai-copilot-title">
+                            <div className="ai-copilot-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="10" fill="#4A8CDF" />
+                                    <path d="M12 6v12M6 12h12" stroke="white" strokeWidth="2" />
+                                </svg>
+                            </div>
+                            <span>Ask Copilot</span>
+                        </div>
+                    </div>
+
+                    <div className="ai-copilot-content">
+                        <div className="ai-copilot-info">
+                            <div className="ai-copilot-logo">⌘</div>
+                            <h2>Copilot is powered by AI, so mistakes are possible.</h2>
+                            <p>Review output carefully before use.</p>
+                        </div>
+
+                        <div className="ai-copilot-actions">
+                            <button className="ai-copilot-action">
+                                <span className="ai-action-icon">✏️</span>
+                                <span>写入人工以附加上下文</span>
+                            </button>
+                            <button className="ai-copilot-action">
+                                <span className="ai-action-icon">💬</span>
+                                <span>与IP直接对文</span>
+                            </button>
+                        </div>
+
+                        <div className="ai-copilot-input">
+                            <div className="ai-input-container">
+                                <span className="ai-input-placeholder">输入/以使用聊天</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

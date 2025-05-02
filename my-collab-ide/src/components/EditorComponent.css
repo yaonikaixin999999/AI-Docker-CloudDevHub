@@ -259,6 +259,8 @@
     font-size: 12px;
     line-height: 22px;
     color: #ffffff;
+    position: relative;
+    z-index: 2;
 }
 
 .status-items-left,
@@ -283,7 +285,17 @@
     }
 }
 
+@media (max-width: 600px) {
+    .activity-bar {
+        width: 30px;
+    }
 
+    .activity-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+}
 
 /* 让所有可拖动区域的边框更加明显，便于用户定位和拖拽 */
 .sidebar-resizer,
@@ -305,7 +317,7 @@
     cursor: col-resize;
 }
 
-/* 活动栏拖动控件 - 右侧边框
+/* 活动栏拖动控件 - 右侧边框 */
 .activity-bar-resizer {
     width: 8px;
     height: 100%;
@@ -313,7 +325,7 @@
     right: -4px;
     top: 0;
     cursor: col-resize;
-} */
+}
 
 /* 面板拖动控件 - 顶部边框 */
 .panel-resizer {
@@ -363,42 +375,156 @@
     cursor: ns-resize;
 }
 
-/* 确保布局正确 */
-.ide-container {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-}
-
-@media (max-width: 600px) {
-    .activity-bar {
-        width: 30px;
-    }
-
-    .activity-icon {
-        width: 28px;
-        height: 28px;
-        font-size: 14px;
-    }
-}
-
 .activity-icon img {
     width: 24px;
-    /* 或者你想要的大小 */
     height: 24px;
     object-fit: contain;
-    /* 保持图片比例 */
 }
 
 /* 活动栏图标激活状态 */
 .activity-icon.active img {
     filter: brightness(1.2);
-    /* 高亮显示激活的图标 */
 }
 
 /* 可选：为图标添加悬停效果 */
 .activity-icon:hover img {
     transform: scale(1.1);
-    /* 悬停时稍微放大 */
     transition: transform 0.2s ease;
+}
+
+/* 主布局容器，使用flex布局 */
+.ide-main-layout {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+/* 让编辑器和面板容器占据中间区域 */
+.editor-and-panel-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* AI面板调整 - 淡蓝白色主题 */
+.ai-copilot-panel {
+    width: 320px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f9fc;
+    border-left: 1px solid #d1e1f1;
+    overflow: hidden;
+}
+
+.ai-copilot-header {
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #d1e1f1;
+    background-color: #edf3f8;
+}
+
+.ai-copilot-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #2b5989;
+}
+
+.ai-copilot-icon svg circle {
+    fill: #4a8cdf;
+}
+
+.ai-copilot-content {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+    background-color: #f9fcff;
+}
+
+.ai-copilot-info {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.ai-copilot-logo {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: #4a8cdf;
+}
+
+.ai-copilot-info h2 {
+    font-size: 16px;
+    font-weight: normal;
+    color: #4a6f94;
+    margin-bottom: 8px;
+}
+
+.ai-copilot-info p {
+    font-size: 14px;
+    color: #6d8cb0;
+}
+
+.ai-copilot-actions {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.ai-copilot-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: #ffffff;
+    border: 1px solid #d1e1f1;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.2s, border-color 0.2s;
+    color: #4a6f94;
+}
+
+.ai-copilot-action:hover {
+    background-color: #edf3f8;
+    border-color: #4a8cdf;
+}
+
+.ai-action-icon {
+    font-size: 18px;
+}
+
+.ai-copilot-input {
+    width: 100%;
+    margin-top: auto;
+}
+
+.ai-input-container {
+    border: 1px solid #d1e1f1;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: text;
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+}
+
+.ai-input-container:hover,
+.ai-input-container:focus-within {
+    border-color: #4a8cdf;
+}
+
+.ai-input-placeholder {
+    color: #6d8cb0;
+    font-size: 14px;
 }
