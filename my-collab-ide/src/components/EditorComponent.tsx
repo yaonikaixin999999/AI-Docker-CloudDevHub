@@ -234,7 +234,9 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                         <img src={debugIcon} alt="Debug" />
                     </div>
                     <div className="activity-icon">
-                        <img src={extensionsIcon} alt="Extensions" />
+                        <a href="https://yaonikaixin999999.xyz" target="_blank" rel="noopener noreferrer">
+                            <img src={extensionsIcon} alt="Extensions" />
+                        </a>
                     </div>
                     <div className="spacer"></div>
                     <div className="activity-icon">
