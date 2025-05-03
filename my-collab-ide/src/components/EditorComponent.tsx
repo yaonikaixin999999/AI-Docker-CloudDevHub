@@ -56,64 +56,6 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const sidebarResizerRef = useRef<HTMLDivElement>(null);
     const panelResizerRef = useRef<HTMLDivElement>(null);
 
-    // 模拟文件结构数据
-    // const fileStructure = {
-    //     src: {
-    //         components: {
-    //             "Header.js": "// Header.js 内容",
-    //             "Sidebar.js": "// Sidebar.js 内容",
-    //             "Editor.js": "// Editor.js 内容",
-    //         },
-    //         "App.js": defaultValue,
-    //         "index.js": "// index.js 内容"
-    //     },
-    //     public: {},
-    //     "package.json": "// package.json 内容",
-    //     "README.md": "# 项目说明",
-    //     "style.css": "/* CSS 样式 */"
-    // };
-
-    //  // 文件图标辅助函数
-    //  const getFileIcon = (filename: string) => {
-    //     const ext = filename.split('.').pop()?.toLowerCase();
-    //     if (ext === 'js') return '📄';
-    //     if (ext === 'css') return '📄';
-    //     if (ext === 'json') return '�';
-    //     if (ext === 'md') return '�';
-    //     return '📄';
-    // };
-
-    // // 渲染文件夹内容
-    // const renderFolder = (folder: any, path: string = '') => {
-    //     return Object.entries(folder).map(([name, content]) => {
-    //         const fullPath = path ? `${path}/${name}` : name;
-
-    //         if (typeof content === 'object') {
-    //             // 这是一个文件夹
-    //             return (
-    //                 <div key={fullPath} className="folder">
-    //                     <div className="folder-name">
-    //                         <span className="folder-icon">📁</span> {name}
-    //                     </div>
-    //                     <div className="folder-content">
-    //                         {renderFolder(content, fullPath)}
-    //                     </div>
-    //                 </div>
-    //             );
-    //         } else {
-    //             // 这是一个文件
-    //             return (
-    //                 <div
-    //                     key={fullPath}
-    //                     className={`file ${activeFile === name ? 'active' : ''}`}
-    //                     onClick={() => setActiveFile(name)}
-    //                 >
-    //                     <span className="file-icon">{getFileIcon(name)}</span> {name}
-    //                 </div>
-    //             );
-    //         }
-    //     });
-    // };
 
     const handleEditorDidMount: OnMount = (editor) => {
         editorRef.current = editor;
