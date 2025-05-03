@@ -42,26 +42,27 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ activeFile, setActiveFile }
     }))
   }
 
-  const renderFolder = (folder: any, path = '') => {
+  const renderFolder = (folder: any, path = '', depth = 0) => {
     return Object.entries(folder).map(([name, content]) => {
       const fullPath = path ? `${path}/${name}` : name
-
+  
       if (typeof content === 'object') {
         const isOpen = expandedFolders[fullPath] ?? true
-
+  
         return (
           <div key={fullPath} className="folder">
             <div
               className="folder-name flex items-center cursor-pointer px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm font-medium text-gray-800 dark:text-gray-100"
+              style={{ marginLeft: `${depth * 16}px` }} // 每层 +16px 缩进
               onClick={() => toggleFolder(fullPath)}
             >
               <span className="mr-2">{isOpen ? '📂' : '📁'}</span>
               {name}
             </div>
             {isOpen && (
-              <div className="ml-[level*8] pl-2 border-l border-gray-300 dark:border-gray-600">
-                {renderFolder(content, fullPath)}
-             </div>
+              <div className="border-l border-gray-300 dark:border-gray-600">
+                {renderFolder(content, fullPath, depth + 1)}
+              </div>
             )}
           </div>
         )
@@ -74,6 +75,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ activeFile, setActiveFile }
                 ? 'bg-blue-100 text-blue-700 font-semibold dark:bg-blue-900 dark:text-white'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
             }`}
+            style={{ marginLeft: `${depth * 16}px` }} // 同样缩进
             onClick={() => setActiveFile(fullPath)}
           >
             <span className="mr-2">{getFileIcon(name)}</span>
@@ -83,6 +85,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ activeFile, setActiveFile }
       }
     })
   }
+  
 
   return (
     <div className="file-explorer text-sm font-mono bg-gray-50 dark:bg-gray-800 p-2 h-full overflow-auto">

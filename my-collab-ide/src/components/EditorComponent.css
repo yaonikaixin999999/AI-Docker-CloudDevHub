@@ -24,6 +24,7 @@
     --transition-default: all 0.2s ease;
 }
 
+
 /* 主容器 */
 .ide-container {
     display: flex;
@@ -249,6 +250,7 @@
 
 .terminal-line {
     padding: 2px 0;
+    text-align: left;
 }
 
 .blink::after {
@@ -670,3 +672,5 @@
     filter: brightness(5);
     /* 使图标在深色背景上更明显 */
 }
+
+
