@@ -3,6 +3,9 @@ import Editor, { OnMount } from '@monaco-editor/react';
 import { editor } from 'monaco-editor';
 import './EditorComponent.css';
 import AIChatPanel from './AIChatPanel'; // 导入新的 AI 聊天组件
+import InviteCollaborator from './InviteCollaborator';
+import FileExplorer from './FileExplorer';
+
 
 // 模拟图标导入
 import explorerIcon from '../icons/icons8-文件夹-40.png';
@@ -33,6 +36,8 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const [value, setValue] = useState<string | undefined>(defaultValue);
     const [activeFile, setActiveFile] = useState("App.js");
     const [activePanelTab, setActivePanelTab] = useState("终端");
+    // <FileExplorer activeFile={activeFile} setActiveFile={setActiveFile} />
+
 
     // 拖动状态
     const [isDraggingActivityBar, setIsDraggingActivityBar] = useState(false);
@@ -52,21 +57,63 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const panelResizerRef = useRef<HTMLDivElement>(null);
 
     // 模拟文件结构数据
-    const fileStructure = {
-        src: {
-            components: {
-                "Header.js": "// Header.js 内容",
-                "Sidebar.js": "// Sidebar.js 内容",
-                "Editor.js": "// Editor.js 内容",
-            },
-            "App.js": defaultValue,
-            "index.js": "// index.js 内容"
-        },
-        public: {},
-        "package.json": "// package.json 内容",
-        "README.md": "# 项目说明",
-        "style.css": "/* CSS 样式 */"
-    };
+    // const fileStructure = {
+    //     src: {
+    //         components: {
+    //             "Header.js": "// Header.js 内容",
+    //             "Sidebar.js": "// Sidebar.js 内容",
+    //             "Editor.js": "// Editor.js 内容",
+    //         },
+    //         "App.js": defaultValue,
+    //         "index.js": "// index.js 内容"
+    //     },
+    //     public: {},
+    //     "package.json": "// package.json 内容",
+    //     "README.md": "# 项目说明",
+    //     "style.css": "/* CSS 样式 */"
+    // };
+
+    //  // 文件图标辅助函数
+    //  const getFileIcon = (filename: string) => {
+    //     const ext = filename.split('.').pop()?.toLowerCase();
+    //     if (ext === 'js') return '📄';
+    //     if (ext === 'css') return '📄';
+    //     if (ext === 'json') return '�';
+    //     if (ext === 'md') return '�';
+    //     return '📄';
+    // };
+
+    // // 渲染文件夹内容
+    // const renderFolder = (folder: any, path: string = '') => {
+    //     return Object.entries(folder).map(([name, content]) => {
+    //         const fullPath = path ? `${path}/${name}` : name;
+
+    //         if (typeof content === 'object') {
+    //             // 这是一个文件夹
+    //             return (
+    //                 <div key={fullPath} className="folder">
+    //                     <div className="folder-name">
+    //                         <span className="folder-icon">📁</span> {name}
+    //                     </div>
+    //                     <div className="folder-content">
+    //                         {renderFolder(content, fullPath)}
+    //                     </div>
+    //                 </div>
+    //             );
+    //         } else {
+    //             // 这是一个文件
+    //             return (
+    //                 <div
+    //                     key={fullPath}
+    //                     className={`file ${activeFile === name ? 'active' : ''}`}
+    //                     onClick={() => setActiveFile(name)}
+    //                 >
+    //                     <span className="file-icon">{getFileIcon(name)}</span> {name}
+    //                 </div>
+    //             );
+    //         }
+    //     });
+    // };
 
     const handleEditorDidMount: OnMount = (editor) => {
         editorRef.current = editor;
@@ -170,47 +217,31 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         return "resize-overlay";
     };
 
-    // 文件图标辅助函数
-    const getFileIcon = (filename: string) => {
-        const ext = filename.split('.').pop()?.toLowerCase();
-        if (ext === 'js') return '📄';
-        if (ext === 'css') return '📄';
-        if (ext === 'json') return '�';
-        if (ext === 'md') return '�';
-        return '📄';
-    };
+   
 
-    // 渲染文件夹内容
-    const renderFolder = (folder: any, path: string = '') => {
-        return Object.entries(folder).map(([name, content]) => {
-            const fullPath = path ? `${path}/${name}` : name;
+// 左边的活动栏和侧边栏的切换逻辑
+    const [activeTab, setActiveTab] = useState('explorer')
 
-            if (typeof content === 'object') {
-                // 这是一个文件夹
-                return (
-                    <div key={fullPath} className="folder">
-                        <div className="folder-name">
-                            <span className="folder-icon">📁</span> {name}
-                        </div>
-                        <div className="folder-content">
-                            {renderFolder(content, fullPath)}
-                        </div>
-                    </div>
-                );
-            } else {
-                // 这是一个文件
-                return (
-                    <div
-                        key={fullPath}
-                        className={`file ${activeFile === name ? 'active' : ''}`}
-                        onClick={() => setActiveFile(name)}
-                    >
-                        <span className="file-icon">{getFileIcon(name)}</span> {name}
-                    </div>
-                );
-            }
-        });
-    };
+    const handleClick = (tabName: string) => {
+        setActiveTab(tabName)
+    }
+
+    const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+    const settingsRef = useRef<HTMLDivElement>(null)
+
+    const toggleSettingsMenu = () => {
+        setShowSettingsMenu(prev => !prev)
+    }
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+        if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+            setShowSettingsMenu(false)
+        }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
 
     return (
         <div className="ide-container">
@@ -221,27 +252,93 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                     ref={activityBarRef}
                     style={{ width: `${activityBarWidth}px` }}
                 >
-                    <div className="activity-icon active">
+                   <div
+                        className={`activity-icon ${activeTab === 'explorer' ? 'active' : ''}`}
+                        onClick={() => handleClick('explorer')}
+                    >
                         <img src={explorerIcon} alt="Explorer" />
                     </div>
-                    <div className="activity-icon">
+                    <div
+                        className={`activity-icon ${activeTab === 'search' ? 'active' : ''}`}
+                        onClick={() => handleClick('search')}
+                    >
                         <img src={searchIcon} alt="Search" />
                     </div>
-                    <div className="activity-icon">
+                    <div
+                        className={`activity-icon ${activeTab === 'git' ? 'active' : ''}`}
+                        onClick={() => handleClick('git')}
+                    >
                         <img src={gitIcon} alt="Git" />
                     </div>
-                    <div className="activity-icon">
+                    <div
+                        className={`activity-icon ${activeTab === 'debug' ? 'active' : ''}`}
+                        onClick={() => handleClick('debug')}
+                    >
                         <img src={debugIcon} alt="Debug" />
                     </div>
-                    <div className="activity-icon">
+                    <div
+                        className={`activity-icon ${activeTab === 'extensions' ? 'active' : ''}`}
+                        onClick={() => handleClick('extensions')}
+                    >
                         <a href="https://yaonikaixin999999.xyz" target="_blank" rel="noopener noreferrer">
                             <img src={extensionsIcon} alt="Extensions" />
                         </a>
                     </div>
                     <div className="spacer"></div>
-                    <div className="activity-icon">
+                    <div 
+                    className="activity-icon"
+                    onClick={toggleSettingsMenu}
+                    ref={settingsRef}
+                    // style={{ position: 'relative' }}
+                    >
                         <img src={settingsIcon} alt="Settings" />
                     </div>
+                        {showSettingsMenu && settingsRef.current && (
+                            <div
+                                className="settings-menu"
+                                style={{
+                                    position: 'absolute',
+                                    left: settingsRef.current.getBoundingClientRect().right + 8 + 'px',
+                                    top: settingsRef.current.getBoundingClientRect().top - 280 + 'px',
+                                    width: '220px',
+                                    backgroundColor: 'var(--surface-lightest)',
+                                    color: 'var(--text-dark)',
+                                    borderRadius: '6px',
+                                    boxShadow: 'var(--shadow-md)',                   // 使用你定义的中等阴影
+                                    border: '1px solid var(--border-light)',         // 加一圈浅灰边框
+                                    zIndex: 9999,
+                                    transition: 'var(--transition-default)'        // 添加过渡动画
+                                }}
+                            >
+                        {[
+                            '配置文件（默认）',
+                            '设置',
+                            '扩展',
+                            '键盘快捷方式',
+                            '代码片段',
+                            '任务',
+                            '主题',
+                            '备份和同步设置',
+                            '下载更新(1)',
+                        ].map((item, index) => (
+                            <div
+                                key={index}
+                                style={{
+                                padding: '8px 16px',
+                                cursor: 'pointer',
+                                }}
+                                onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'var(--primary-light)';
+                                }}
+                                onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                            >
+                            {item}
+                            </div>
+                        ))}
+                        </div>
+                    )}
                     {/* 活动栏拖动控件 */}
                     <div
                         className="activity-bar-resizer"
@@ -263,9 +360,26 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                         </div>
                     </div>
                     <div className="sidebar-content">
+                    {activeTab === 'explorer' && (
                         <div className="file-explorer">
-                            {renderFolder(fileStructure)}
+                        <FileExplorer activeFile={activeFile} setActiveFile={setActiveFile} />
                         </div>
+                        )}
+                        {activeTab === 'search' && (
+                            <div className="search-panel">🔍 搜索功能面板</div>
+                        )}
+                        {activeTab === 'git' && (
+                            <div className="p-4">
+                                <InviteCollaborator />
+                                {/* todo */}
+                            </div>
+                        )}
+                        {activeTab === 'debug' && (
+                            <div className="debug-panel">🐞 调试功能面板</div>
+                        )}
+                        {activeTab === 'extensions' && (
+                            <div className="extensions-panel">🧩 扩展功能面板</div>
+                        )}
                     </div>
                     {/* 侧边栏拖动控件 */}
                     <div
