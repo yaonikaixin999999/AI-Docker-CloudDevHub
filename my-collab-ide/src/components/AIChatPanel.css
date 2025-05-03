@@ -767,3 +767,236 @@ kbd {
     border-radius: 4px;
     object-fit: cover;
 }
+
+/* 配置项样式 */
+.ai-config-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* 使配置项内的元素居中 */
+    margin-bottom: 15px;
+}
+
+.ai-config-label {
+    margin-bottom: 8px;
+    text-align: center;
+    /* 标签居中对齐 */
+    width: 100%;
+}
+
+/* 开关样式 */
+.ai-config-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* 添加居中对齐 */
+    width: 100%;
+    /* 确保使用整个可用宽度 */
+}
+
+.ai-config-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-label {
+    position: relative;
+    display: inline-block;
+    width: 160px;
+    height: 34px;
+    background-color: var(--ai-surface-dark);
+    border-radius: 17px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding-left: 46px;
+    line-height: 34px;
+    color: var(--ai-text-light);
+    font-size: 13px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.toggle-label::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to right, var(--ai-surface-mid) 50%, var(--ai-primary-light) 50%);
+    background-size: 200% 100%;
+    background-position: 100% 0;
+    transition: background-position 0.3s ease;
+    border-radius: 17px;
+    z-index: 0;
+}
+
+.toggle-label::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 30px;
+    height: 30px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.toggle-label span {
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.toggle-label .toggle-label-text {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+.toggle-label .toggle-off {
+    opacity: 1;
+}
+
+.toggle-label .toggle-on {
+    opacity: 0;
+    color: var(--ai-primary-dark);
+}
+
+input[type="checkbox"]:checked+.toggle-label {
+    padding-left: 0;
+    padding-right: 46px;
+}
+
+input[type="checkbox"]:checked+.toggle-label::before {
+    background-position: 0 0;
+}
+
+input[type="checkbox"]:checked+.toggle-label::after {
+    transform: translateX(126px);
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(43, 108, 176, 0.3);
+}
+
+input[type="checkbox"]:checked+.toggle-label .toggle-off {
+    opacity: 0;
+}
+
+input[type="checkbox"]:checked+.toggle-label .toggle-on {
+    opacity: 1;
+}
+
+/* 添加开关图标样式 */
+.toggle-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    object-fit: contain;
+    /* 保持图片比例 */
+}
+
+/* 保存按钮样式 */
+.ai-config-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.ai-config-save {
+    padding: 8px 16px;
+    background-color: var(--ai-primary);
+    color: white;
+    border: none;
+    border-radius: var(--ai-border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--ai-transition-default);
+}
+
+.ai-config-save:hover {
+    background-color: var(--ai-primary-dark);
+}
+
+/* 下拉菜单样式 */
+.ai-key-input[type="text"],
+.ai-key-input[type="password"],
+select.ai-key-input {
+    padding: 8px 12px;
+    border: 1px solid var(--ai-border-light);
+    border-radius: var(--ai-border-radius);
+    font-size: 14px;
+    background-color: var(--ai-surface-lightest);
+    transition: var(--ai-transition-default);
+    width: 100%;
+}
+
+select.ai-key-input {
+    cursor: pointer;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.ai-key-input:focus,
+select.ai-key-input:focus {
+    outline: none;
+    border-color: var(--ai-accent);
+    box-shadow: 0 0 0 1px var(--ai-accent);
+}
+
+/* 输入组样式，用于URL+按钮组合 */
+.ai-key-input-group {
+    display: flex;
+    gap: var(--ai-spacing-sm);
+}
+
+.ai-key-input-group .ai-key-input {
+    flex: 1;
+}
+
+.ai-key-test {
+    background-color: var(--ai-surface-mid);
+    border: 1px solid var(--ai-border-light);
+    border-radius: var(--ai-border-radius);
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--ai-text-mid);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--ai-transition-default);
+}
+
+.ai-key-test:hover:not(:disabled) {
+    background-color: var(--ai-primary-light);
+    color: var(--ai-primary);
+}
+
+.ai-key-test:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ai-key-note.loading {
+    color: var(--ai-primary);
+    font-style: italic;
+}
+
+code {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    background: var(--ai-surface-mid);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 12px;
+}

@@ -217,9 +217,9 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         return "resize-overlay";
     };
 
-   
 
-// 左边的活动栏和侧边栏的切换逻辑
+
+    // 左边的活动栏和侧边栏的切换逻辑
     const [activeTab, setActiveTab] = useState('explorer')
 
     const handleClick = (tabName: string) => {
@@ -235,9 +235,9 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-        if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
-            setShowSettingsMenu(false)
-        }
+            if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+                setShowSettingsMenu(false)
+            }
         }
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -252,7 +252,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                     ref={activityBarRef}
                     style={{ width: `${activityBarWidth}px` }}
                 >
-                   <div
+                    <div
                         className={`activity-icon ${activeTab === 'explorer' ? 'active' : ''}`}
                         onClick={() => handleClick('explorer')}
                     >
@@ -285,58 +285,58 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                         </a>
                     </div>
                     <div className="spacer"></div>
-                    <div 
-                    className="activity-icon"
-                    onClick={toggleSettingsMenu}
-                    ref={settingsRef}
+                    <div
+                        className="activity-icon"
+                        onClick={toggleSettingsMenu}
+                        ref={settingsRef}
                     // style={{ position: 'relative' }}
                     >
                         <img src={settingsIcon} alt="Settings" />
                     </div>
-                        {showSettingsMenu && settingsRef.current && (
-                            <div
-                                className="settings-menu"
-                                style={{
-                                    position: 'absolute',
-                                    left: settingsRef.current.getBoundingClientRect().right + 8 + 'px',
-                                    top: settingsRef.current.getBoundingClientRect().top - 280 + 'px',
-                                    width: '220px',
-                                    backgroundColor: 'var(--surface-lightest)',
-                                    color: 'var(--text-dark)',
-                                    borderRadius: '6px',
-                                    boxShadow: 'var(--shadow-md)',                   // 使用你定义的中等阴影
-                                    border: '1px solid var(--border-light)',         // 加一圈浅灰边框
-                                    zIndex: 9999,
-                                    transition: 'var(--transition-default)'        // 添加过渡动画
-                                }}
-                            >
-                        {[
-                            '配置文件（默认）',
-                            '设置',
-                            '扩展',
-                            '键盘快捷方式',
-                            '代码片段',
-                            '任务',
-                            '主题',
-                            '备份和同步设置',
-                            '下载更新(1)',
-                        ].map((item, index) => (
-                            <div
-                                key={index}
-                                style={{
-                                padding: '8px 16px',
-                                cursor: 'pointer',
-                                }}
-                                onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'var(--primary-light)';
-                                }}
-                                onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                                }}
-                            >
-                            {item}
-                            </div>
-                        ))}
+                    {showSettingsMenu && settingsRef.current && (
+                        <div
+                            className="settings-menu"
+                            style={{
+                                position: 'absolute',
+                                left: settingsRef.current.getBoundingClientRect().right + 8 + 'px',
+                                top: settingsRef.current.getBoundingClientRect().top - 280 + 'px',
+                                width: '220px',
+                                backgroundColor: 'var(--surface-lightest)',
+                                color: 'var(--text-dark)',
+                                borderRadius: '6px',
+                                boxShadow: 'var(--shadow-md)',                   // 使用你定义的中等阴影
+                                border: '1px solid var(--border-light)',         // 加一圈浅灰边框
+                                zIndex: 9999,
+                                transition: 'var(--transition-default)'        // 添加过渡动画
+                            }}
+                        >
+                            {[
+                                '配置文件（默认）',
+                                '设置',
+                                '扩展',
+                                '键盘快捷方式',
+                                '代码片段',
+                                '任务',
+                                '主题',
+                                '备份和同步设置',
+                                '下载更新(1)',
+                            ].map((item, index) => (
+                                <div
+                                    key={index}
+                                    style={{
+                                        padding: '8px 16px',
+                                        cursor: 'pointer',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'var(--primary-light)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                    }}
+                                >
+                                    {item}
+                                </div>
+                            ))}
                         </div>
                     )}
                     {/* 活动栏拖动控件 */}
@@ -360,10 +360,10 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                         </div>
                     </div>
                     <div className="sidebar-content">
-                    {activeTab === 'explorer' && (
-                        <div className="file-explorer">
-                        <FileExplorer activeFile={activeFile} setActiveFile={setActiveFile} />
-                        </div>
+                        {activeTab === 'explorer' && (
+                            <div className="file-explorer">
+                                <FileExplorer activeFile={activeFile} setActiveFile={setActiveFile} />
+                            </div>
                         )}
                         {activeTab === 'search' && (
                             <div className="search-panel">🔍 搜索功能面板</div>

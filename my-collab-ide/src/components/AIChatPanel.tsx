@@ -10,6 +10,8 @@ import minimizeIcon from '../icons/icons8-最小化-40.png';
 import expandIcon from '../icons/icons8-最大化-40.png';
 import userAvatar from '../icons/user.jpg';
 import sendIcon from '../icons/icons8-发送-40.png';
+import openAiIcon from '../icons/icons8-聊天室-50.png';
+import githubIcon from '../icons/icons8-github-240.png';
 
 interface AIChatPanelProps {
     width: number;
@@ -20,7 +22,7 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
-    const [hasApiKey, setHasApiKey] = useState(false);
+    const [hasApiKey, setHasApiKey] = useState(true); // 默认设置为true，因为我们使用本地模型不需要API key
     const [apiKey, setApiKey] = useState('');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -32,6 +34,16 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
     const [isDraggingAIPanel, setIsDraggingAIPanel] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+    const [useLocalModel, setUseLocalModel] = useState(true);
+    const [localModelUrl, setLocalModelUrl] = useState('http://192.168.31.124:1234/v1');
+    // 默认设置为第一个聊天模型
+    const [modelName, setModelName] = useState('deepseek-r1-distill-qwen-14b');
+    const [availableModels, setAvailableModels] = useState<string[]>([
+        'deepseek-r1-distill-qwen-14b',
+        'mimo-7b-rl-nomtp'
+    ]);
+    const [loadingModels, setLoadingModels] = useState(false);
+
     // 引入示例对话提示
     const conversationExamples = [
         "你能帮我解释一下React Hooks的工作原理吗？",
@@ -40,15 +52,101 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
         "请帮我修复这段代码中的错误"
     ];
 
-    // 初始化检查是否有 API Key
+    // 初始化时检查本地模型设置
     useEffect(() => {
-        const hasKey = apiKeyService.hasApiKey();
-        setHasApiKey(hasKey);
+        // 设置默认使用本地模型
+        localStorage.setItem('use_local_model', 'true');
+        localStorage.setItem('local_model_url', 'http://192.168.31.124:1234/v1');
 
-        if (hasKey) {
-            aiService.setApiKey(apiKeyService.getApiKey());
-        }
+        // 应用设置到服务
+        aiService.toggleModelSource(true);
+        aiService.setLocalModelUrl('http://192.168.31.124:1234/v1');
+
+        // 加载模型列表
+        fetchAvailableModels('http://192.168.31.124:1234/v1');
+
+        // 使用本地模型时直接设置hasApiKey为true，因为不需要API Key
+        setHasApiKey(true);
+
+        // 从localStorage读取本地模型设置
+        const savedUseLocal = true; // 强制使用本地模型
+        const savedLocalUrl = localStorage.getItem('local_model_url') || 'http://192.168.31.124:1234/v1';
+        // 默认使用第一个聊天模型
+        const savedModelName = localStorage.getItem('model_name') || 'deepseek-r1-distill-qwen-14b';
+
+        setUseLocalModel(savedUseLocal);
+        setLocalModelUrl(savedLocalUrl);
+        setModelName(savedModelName);
+
+        // 应用设置到服务
+        aiService.toggleModelSource(savedUseLocal);
+        aiService.setLocalModelUrl(savedLocalUrl);
+        aiService.setModel(savedModelName);
     }, []);
+
+    // 获取可用模型列表
+    const fetchAvailableModels = async (url: string) => {
+        try {
+            setLoadingModels(true);
+            setErrorMessage(null);
+
+            // 临时设置URL以获取模型
+            aiService.setLocalModelUrl(url);
+            aiService.toggleModelSource(true);
+
+            const models = await aiService.getAvailableModels();
+
+            // 过滤出聊天模型，排除embedding模型
+            const chatModels = models.filter(model => !model.includes('embed'));
+
+            setAvailableModels(chatModels.length > 0 ? chatModels : ['deepseek-r1-distill-qwen-14b', 'mimo-7b-rl-nomtp']);
+
+            if (chatModels.length > 0 && !chatModels.includes(modelName)) {
+                // 如果当前选择的模型不在列表中，自动选择第一个
+                setModelName(chatModels[0]);
+                aiService.setModel(chatModels[0]);
+                localStorage.setItem('model_name', chatModels[0]);
+            }
+        } catch (error) {
+            console.error('获取模型列表失败:', error);
+            setErrorMessage('无法连接到本地模型服务器，请检查URL和服务器状态');
+            // 使用已知的模型作为备选
+            setAvailableModels(['deepseek-r1-distill-qwen-14b', 'mimo-7b-rl-nomtp']);
+        } finally {
+            setLoadingModels(false);
+        }
+    };
+
+    // 处理模型配置变更
+    const handleToggleLocalModel = (checked: boolean) => {
+        setUseLocalModel(checked);
+        aiService.toggleModelSource(checked);
+        localStorage.setItem('use_local_model', checked.toString());
+
+        // 如果切换到本地模型，尝试加载可用模型
+        if (checked) {
+            fetchAvailableModels(localModelUrl);
+        }
+
+        // 使用本地模型时不需要API Key
+        setHasApiKey(checked);
+    };
+
+    const handleLocalUrlChange = (url: string) => {
+        setLocalModelUrl(url);
+        aiService.setLocalModelUrl(url);
+        localStorage.setItem('local_model_url', url);
+    };
+
+    const handleTestLocalConnection = () => {
+        fetchAvailableModels(localModelUrl);
+    };
+
+    const handleModelNameChange = (name: string) => {
+        setModelName(name);
+        aiService.setModel(name);
+        localStorage.setItem('model_name', name);
+    };
 
     // 处理消息自动滚动
     useEffect(() => {
@@ -102,15 +200,9 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
         setIsDraggingAIPanel(true);
     };
 
+    // 发送消息前验证
     const handleSendMessage = async () => {
         if (!input.trim() || isTyping) return;
-
-        // 检查是否有 API Key
-        if (!hasApiKey) {
-            setErrorMessage('请先设置 API Key');
-            setIsConfigOpen(true);
-            return;
-        }
 
         try {
             setErrorMessage(null);
@@ -143,6 +235,138 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
         } finally {
             setIsTyping(false);
         }
+    };
+
+    // 在配置面板中添加本地模型设置
+    const renderConfigPanel = () => {
+        return (
+            <div className="ai-key-config">
+                <div className="ai-key-header">
+                    <h3>AI 模型设置</h3>
+                </div>
+
+                {/* 优化后的模型来源切换 */}
+                <div className="ai-config-item">
+                    <label htmlFor="model-source" className="ai-config-label">模型来源</label>
+                    <div className="ai-config-toggle">
+                        <input
+                            type="checkbox"
+                            id="model-source"
+                            checked={useLocalModel}
+                            onChange={(e) => handleToggleLocalModel(e.target.checked)}
+                        />
+                        <label htmlFor="model-source" className="toggle-label">
+                            <div className="toggle-label-text toggle-off">
+                                <img src={openAiIcon} alt="OpenAI" className="toggle-icon" />
+                                OpenAI API
+                            </div>
+                            <div className="toggle-label-text toggle-on">
+                                <img src={githubIcon} alt="本地模型" className="toggle-icon" />
+                                本地模型
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+
+                {/* 本地模型URL配置 */}
+                {useLocalModel && (
+                    <div className="ai-config-item">
+                        <label className="ai-config-label">本地模型URL</label>
+                        <div className="ai-key-input-group">
+                            <input
+                                className="ai-key-input"
+                                type="text"
+                                value={localModelUrl}
+                                onChange={(e) => handleLocalUrlChange(e.target.value)}
+                                placeholder="例如: http://192.168.31.124:1234/v1"
+                            />
+                            <button
+                                className="ai-key-test"
+                                onClick={handleTestLocalConnection}
+                                disabled={loadingModels}
+                            >
+                                {loadingModels ? "连接中..." : "测试连接"}
+                            </button>
+                        </div>
+                        <p className="ai-key-note">
+                            指向本地LMstudio API端点的URL
+                        </p>
+                    </div>
+                )}
+
+                {/* 模型名称 */}
+                <div className="ai-config-item">
+                    <label className="ai-config-label">选择模型</label>
+                    <select
+                        className="ai-key-input"
+                        value={modelName}
+                        onChange={(e) => handleModelNameChange(e.target.value)}
+                    >
+                        {useLocalModel ? (
+                            availableModels.length > 0 ? (
+                                availableModels.map(model => (
+                                    <option key={model} value={model}>{model}</option>
+                                ))
+                            ) : (
+                                <>
+                                    <option value="deepseek-r1-distill-qwen-14b">deepseek-r1-distill-qwen-14b</option>
+                                    <option value="mimo-7b-rl-nomtp">mimo-7b-rl-nomtp</option>
+                                </>
+                            )
+                        ) : (
+                            <>
+                                <option value="gpt-4">GPT-4.1</option>
+                                <option value="gpt-4">GPT-4o</option>
+                                <option value="gpt-4">GPT-o4-mini</option>
+                                <option value="gpt-4">GPT-03-mini</option>
+                            </>
+                        )}
+                    </select>
+                    {useLocalModel && loadingModels && (
+                        <p className="ai-key-note loading">正在加载可用模型...</p>
+                    )}
+                </div>
+
+                {/* API Key配置（仅当使用OpenAI API时） */}
+                {!useLocalModel && (
+                    <>
+                        <div className="ai-key-header" style={{ marginTop: '20px' }}>
+                            <h3>API Key 设置</h3>
+                            <p className="ai-key-info">请输入你的 OpenAI API Key</p>
+                        </div>
+                        <div className="ai-key-input-container">
+                            <input
+                                type="password"
+                                className="ai-key-input"
+                                placeholder="输入你的 API Key"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                            />
+                            <button className="ai-key-submit" onClick={handleSaveApiKey}>
+                                保存
+                            </button>
+                        </div>
+                        <p className="ai-key-note">
+                            API Key 将安全地存储在你的浏览器中，不会上传到任何服务器。
+                        </p>
+                    </>
+                )}
+
+                {errorMessage && (
+                    <div className="ai-error-message">
+                        <div className="error-icon">⚠️</div>
+                        <span>{errorMessage}</span>
+                    </div>
+                )}
+
+                <div className="ai-config-actions">
+                    <button className="ai-config-save" onClick={() => setIsConfigOpen(false)}>
+                        完成
+                    </button>
+                </div>
+            </div>
+        );
     };
 
     const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -261,17 +485,7 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
                     {!isMinimized && <span>AI 助手</span>}
                 </div>
                 <div className="ai-chat-actions">
-                    {!isMinimized && !hasApiKey && (
-                        <button
-                            className="ai-key-required"
-                            onClick={() => setIsConfigOpen(true)}
-                            title="需要设置API Key"
-                        >
-                            <i className="icon-key">🔑</i>
-                        </button>
-                    )}
-
-                    {!isMinimized && hasApiKey && (
+                    {!isMinimized && (
                         <>
                             <button
                                 className="ai-action-btn"
@@ -307,29 +521,7 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
 
             {!isMinimized && (
                 <>
-                    {isConfigOpen && (
-                        <div className="ai-key-config">
-                            <div className="ai-key-header">
-                                <h3>API Key 设置</h3>
-                                <p className="ai-key-info">请输入你的 OpenAI API Key 以启用 AI 助手</p>
-                            </div>
-                            <div className="ai-key-input-container">
-                                <input
-                                    type="password"
-                                    className="ai-key-input"
-                                    placeholder="输入你的 API Key"
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                />
-                                <button className="ai-key-submit" onClick={handleSaveApiKey}>
-                                    保存
-                                </button>
-                            </div>
-                            <p className="ai-key-note">
-                                API Key 将安全地存储在你的浏览器中，不会上传到任何服务器。
-                            </p>
-                        </div>
-                    )}
+                    {isConfigOpen && renderConfigPanel()}
 
                     {errorMessage && <div className="ai-error-message">{errorMessage}</div>}
 
@@ -342,7 +534,7 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
                                             <img src={aiLogo} alt="AI 助手" className="ai-welcome-logo" />
                                         </div>
                                         <h2>智能编程助手</h2>
-                                        <p>针对你的编程问题提供专业解答和代码建议</p>
+                                        <p>使用本地LM Studio模型为您的编程问题提供解答和代码建议</p>
                                     </div>
 
                                     <div className="ai-examples">
@@ -421,24 +613,14 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
                                     onKeyDown={handleKeyPress}
                                 />
 
-                                {hasApiKey ? (
-                                    <button
-                                        className={`ai-send-button ${(!input.trim() || isTyping) ? 'disabled' : ''}`}
-                                        onClick={handleSendMessage}
-                                        disabled={!input.trim() || isTyping}
-                                        title="发送消息"
-                                    >
-                                        <img src={sendIcon} alt="发送" width="20" height="20" />
-                                    </button>
-                                ) : (
-                                    <button
-                                        className="ai-key-button"
-                                        onClick={() => setIsConfigOpen(true)}
-                                        title="设置API Key"
-                                    >
-                                        <i className="icon-key">🔑</i>
-                                    </button>
-                                )}
+                                <button
+                                    className={`ai-send-button ${(!input.trim() || isTyping) ? 'disabled' : ''}`}
+                                    onClick={handleSendMessage}
+                                    disabled={!input.trim() || isTyping}
+                                    title="发送消息"
+                                >
+                                    <img src={sendIcon} alt="发送" width="20" height="20" />
+                                </button>
                             </div>
                             <div className="ai-input-info">
                                 {input.length > 0 && (

@@ -9,13 +9,56 @@ function App() {
   const [isApiKeySet, setIsApiKeySet] = useState(false);
 
   useEffect(() => {
-    // 检查是否已设置 API Key
-    const hasKey = apiKeyService.hasApiKey();
-    setIsApiKeySet(hasKey);
+    // 默认使用本地模型设置
+    localStorage.setItem('use_local_model', 'true');
+    localStorage.setItem('local_model_url', 'http://192.168.31.124:1234/v1');
 
-    if (hasKey) {
-      // 如果已设置，初始化 AI 服务
-      aiService.setApiKey(apiKeyService.getApiKey());
+    // 检查模型配置
+    const useLocalModel = localStorage.getItem('use_local_model') === 'true';
+    const localModelUrl = localStorage.getItem('local_model_url') || 'http://192.168.31.124:1234/v1';
+
+    // 初始化时加载模型列表来确定默认模型名称
+    const initializeModels = async () => {
+      try {
+        // 应用模型配置
+        aiService.toggleModelSource(true); // 强制使用本地模型
+        aiService.setLocalModelUrl(localModelUrl);
+
+        // 获取可用模型列表
+        const models = await aiService.getAvailableModels();
+        console.log('可用模型列表:', models);
+
+        if (models && models.length > 0) {
+          const modelName = models[0]; // 使用第一个可用模型
+          localStorage.setItem('model_name', modelName);
+          aiService.setModel(modelName);
+          console.log('已设置默认模型:', modelName);
+        } else {
+          // 如果无法获取模型，使用默认值
+          const defaultModel = 'local-model';
+          localStorage.setItem('model_name', defaultModel);
+          aiService.setModel(defaultModel);
+          console.log('无法获取可用模型，使用默认值:', defaultModel);
+        }
+      } catch (error) {
+        console.error('初始化模型失败:', error);
+        // 出错时使用默认值
+        const defaultModel = 'local-model';
+        localStorage.setItem('model_name', defaultModel);
+        aiService.setModel(defaultModel);
+      }
+    };
+
+    initializeModels();
+
+    // 如果不使用本地模型，则需要检查API Key
+    if (!useLocalModel) {
+      const hasKey = apiKeyService.hasApiKey();
+      setIsApiKeySet(hasKey);
+
+      if (hasKey) {
+        aiService.setApiKey(apiKeyService.getApiKey());
+      }
     }
   }, []);
 
