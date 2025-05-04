@@ -1,0 +1,168 @@
+/* 搜索组件样式 - 符合淡蓝白色主题 */
+.search-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: var(--text-dark);
+    background-color: var(--surface-light);
+    overflow: hidden;
+}
+
+.search-header {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.search-title {
+    font-weight: 500;
+    color: var(--text-mid);
+    padding: 0 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.search-action {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--text-light);
+    font-size: 14px;
+    padding: 2px;
+}
+
+.search-action:hover {
+    color: var(--primary-blue);
+}
+
+.search-input-container {
+    position: relative;
+    padding: 0 8px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 6px 8px 6px 32px;
+    /* 稍微调整左边距以适应图片图标 */
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    background-color: var(--surface-lightest);
+    font-size: 13px;
+    color: var(--text-dark);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 1px rgba(43, 108, 176, 0.2);
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.search-options {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.search-options-left {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.search-options-right {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.search-option {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.search-option:hover {
+    background-color: var(--surface-mid);
+}
+
+.search-option.active {
+    color: var(--primary-blue);
+}
+
+.search-toggle {
+    padding: 6px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    background-color: var(--surface-lightest);
+    cursor: pointer;
+    margin: 4px 8px;
+}
+
+.search-toggle:hover {
+    background-color: var(--surface-mid);
+}
+
+.search-toggle-label {
+    font-weight: 500;
+    color: var(--text-mid);
+    font-size: 12px;
+}
+
+.search-toggle-shortcut {
+    color: var(--text-light);
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.search-results {
+    flex: 1;
+    overflow: auto;
+    padding: 8px;
+}
+
+.search-more {
+    padding: 8px;
+    display: flex;
+    justify-content: center;
+    color: var(--text-light);
+    font-size: 12px;
+}
+
+.search-icon-img {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+}

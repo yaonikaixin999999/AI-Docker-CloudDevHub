@@ -5,7 +5,8 @@ import './EditorComponent.css';
 import AIChatPanel from './AIChatPanel'; // 导入新的 AI 聊天组件
 import InviteCollaborator from './InviteCollaborator';
 import FileExplorer from './FileExplorer';
-
+import RunAndDebug from './RunAndDebug';
+import Search from './Search'
 
 // 模拟图标导入
 import explorerIcon from '../icons/icons8-文件夹-40.png';
@@ -308,16 +309,19 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                             </div>
                         )}
                         {activeTab === 'search' && (
-                            <div className="search-panel">🔍 搜索功能面板</div>
+                            <div className="search-panel">
+                                <Search />
+                            </div>
                         )}
                         {activeTab === 'git' && (
                             <div className="p-4">
                                 <InviteCollaborator />
-                                {/* todo */}
                             </div>
                         )}
                         {activeTab === 'debug' && (
-                            <div className="debug-panel">🐞 调试功能面板</div>
+                            <div className="debug-panel">
+                                <RunAndDebug />
+                            </div>
                         )}
                         {activeTab === 'extensions' && (
                             <div className="extensions-panel">🧩 扩展功能面板</div>
