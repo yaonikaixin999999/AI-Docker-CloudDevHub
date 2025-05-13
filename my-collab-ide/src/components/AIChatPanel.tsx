@@ -22,7 +22,8 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ width, onResize }) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
-    const [hasApiKey, setHasApiKey] = useState(true); // 默认设置为true，因为我们使用本地模型不需要API key
+    const [, setHasApiKey] = useState(true); // 默认设置为true，因为我们使用本地模型不需要API key
+    // const [hasApiKey, setHasApiKey] = useState(true); 
     const [apiKey, setApiKey] = useState('');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isConfigOpen, setIsConfigOpen] = useState(false);

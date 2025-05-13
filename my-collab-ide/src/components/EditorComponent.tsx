@@ -28,13 +28,14 @@ interface EditorComponentProps {
 const EditorComponent: React.FC<EditorComponentProps> = ({
     defaultLanguage = 'javascript',
     defaultValue = '// 在这里开始编写代码\n',
-    height = '500px',
-    width = '100%',
+    // height = '500px',
+    // width = '100%',
     theme = 'vs',
     onChange
 }) => {
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-    const [value, setValue] = useState<string | undefined>(defaultValue);
+    const [, setValue] = useState<string | undefined>(defaultValue);
+    // const [value, setValue] = useState<string | undefined>(defaultValue);
     const [activeFile, setActiveFile] = useState("App.js");
     const [activePanelTab, setActivePanelTab] = useState("终端");
     // <FileExplorer activeFile={activeFile} setActiveFile={setActiveFile} />
@@ -143,14 +144,14 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         }
     }, [activityBarWidth, sidebarWidth, panelHeight, aiPanelWidth]);
 
-    // 生成行号
-    const generateLineNumbers = () => {
-        if (!value) return [];
-        const lines = value.split('\n');
-        return lines.map((_, index) => (
-            <div key={index} className="line-number">{index + 1}</div>
-        ));
-    };
+    // // 生成行号
+    // const generateLineNumbers = () => {
+    //     if (!value) return [];
+    //     const lines = value.split('\n');
+    //     return lines.map((_, index) => (
+    //         <div key={index} className="line-number">{index + 1}</div>
+    //     ));
+    // };
 
     // 确定拖动时遮罩层的样式
     const getOverlayClassName = () => {

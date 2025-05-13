@@ -6,7 +6,8 @@ import { aiService } from './services/aiService';
 
 function App() {
   const [code, setCode] = useState<string | undefined>("console.log('Hello, World!');");
-  const [isApiKeySet, setIsApiKeySet] = useState(false);
+  // const [isApiKeySet, setIsApiKeySet] = useState(false);
+  const [, setIsApiKeySet] = useState(false);
 
   useEffect(() => {
     // 默认使用本地模型设置

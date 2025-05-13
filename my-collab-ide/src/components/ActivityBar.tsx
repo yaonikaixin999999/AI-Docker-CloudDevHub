@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
 import explorerIcon from '../icons/icons8-文件夹-40.png';
-import searchIcon from '../icons/icons8-搜索-40.png';
-import gitIcon from '../icons/icons8-代码叉-40.png';
-import debugIcon from '../icons/icons8-播放-40.png';
-import extensionsIcon from '../icons/icons8-用户组-40.png';
+// import searchIcon from '../icons/icons8-搜索-40.png';
+// import gitIcon from '../icons/icons8-代码叉-40.png';
+// import debugIcon from '../icons/icons8-播放-40.png';
+// import extensionsIcon from '../icons/icons8-用户组-40.png';
 import settingsIcon from '../icons/icons8-设置-40.png';
 
 interface ActivityBarProps {
@@ -69,6 +69,7 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
                 onClick={toggleSettingsMenu}
                 ref={settingsRef}
             >
+
                 <img src={settingsIcon} alt="Settings" />
             </div>
 

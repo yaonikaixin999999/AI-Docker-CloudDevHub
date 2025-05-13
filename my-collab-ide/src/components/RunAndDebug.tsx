@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import './RunAndDebug.css';
 
 const RunAndDebug: React.FC = () => {
-    const [expanded, setExpanded] = useState(true);
+    const [expanded,] = useState(true);
+    // const [expanded, setExpanded] = useState(true);
 
     return (
         <div className="run-debug-container">
