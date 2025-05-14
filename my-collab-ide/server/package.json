@@ -1,25 +1,19 @@
 {
-  "name": "server",
+  "name": "cloud-code-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "CloudDevHub后端",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "express": "^5.1.0",
-    "ssh2-sftp-client": "^12.0.0",
-    "ws": "^8.18.2"
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "ssh2": "^1.14.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1",
-    "@types/node": "^22.15.17",
-    "@types/ws": "^8.18.1",
-    "nodemon": "^3.1.10",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "nodemon": "^3.0.1"
   }
 }

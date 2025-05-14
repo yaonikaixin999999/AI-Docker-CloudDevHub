@@ -1,97 +1,212 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-// 示例文件结构
-const fileStructure = {
-  src: {
-    components: {
-      'Header.js': '// Header.js 内容',
-      'Sidebar.js': '// Sidebar.js 内容',
-      'Editor.js': '// Editor.js 内容',
-    },
-    'App.js': '// App.js 内容',
-    'index.js': '// index.js 内容',
-  },
-  public: {},
-  'package.json': '// package.json 内容',
-  'README.md': '# 项目说明',
-  'style.css': '/* CSS 样式 */',
+// 导入自定义图标
+import defaultFolderIcon from '../icons/Coding_icons/default_folder.svg';
+import defaultFolderOpenedIcon from '../icons/Coding_icons/default_folder_opened.svg';
+import cFileIcon from '../icons/Coding_icons/file_type_c.svg';
+import cppFileIcon from '../icons/Coding_icons/file_type_cpp2.svg';
+import javaFileIcon from '../icons/Coding_icons/file_type_java.svg';
+import pythonFileIcon from '../icons/Coding_icons/file_type_python.svg';
+import defaultFileIcon from '../icons/Coding_icons/icons8-文件-80.png';
+
+// API 基础 URL
+const API_BASE_URL = 'http://localhost:3001/api';
+
+// 文件类型接口
+interface FileNode {
+  name: string;
+  path: string;
+  type: 'directory' | 'file';
+  children?: FileNode[];
+  size?: number;
+  modifyTime?: string;
 }
 
-// 获取文件图标（使用 emoji 或者你可替换为 icon 组件）
-const getFileIcon = (filename: string) => {
-  const ext = filename.split('.').pop()?.toLowerCase()
-  if (ext === 'js') return '📜'
-  if (ext === 'css') return '🎨'
-  if (ext === 'json') return '🛠️'
-  if (ext === 'md') return '📘'
-  return '📄'
+interface FileExplorerProps {
+  activeFile: string;
+  setActiveFile: (filePath: string) => void;
+  updateEditorContent: (content: string) => void;
 }
 
-type FileExplorerProps = {
-  activeFile: string | null
-  setActiveFile: (file: string) => void
-}
+const FileExplorer: React.FC<FileExplorerProps> = ({
+  activeFile,
+  setActiveFile,
+  updateEditorContent
+}) => {
+  const [files, setFiles] = useState<FileNode[]>([]);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [rootDir] = useState<string>('/data/My_Desktop/User_Coding');
 
-const FileExplorer: React.FC<FileExplorerProps> = ({ activeFile, setActiveFile }) => {
-  const [expandedFolders, setExpandedFolders] = useState<{ [key: string]: boolean }>({})
+  // 获取文件图标
+  const getFileIcon = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
 
-  const toggleFolder = (path: string) => {
+    switch (extension) {
+      case 'c':
+        return <img src={cFileIcon} alt="C" width="16" height="16" />;
+      case 'cpp':
+      case 'cc':
+      case 'cxx':
+      case 'h':
+      case 'hpp':
+        return <img src={cppFileIcon} alt="C++" width="16" height="16" />;
+      case 'java':
+        return <img src={javaFileIcon} alt="Java" width="16" height="16" />;
+      case 'py':
+      case 'python':
+        return <img src={pythonFileIcon} alt="Python" width="16" height="16" />;
+      default:
+        return <img src={defaultFileIcon} alt="File" width="16" height="16" />;
+    }
+  };
+
+  // 获取文件夹图标
+  const getFolderIcon = (isExpanded: boolean) => {
+    return isExpanded
+      ? <img src={defaultFolderOpenedIcon} alt="Folder open" width="16" height="16" />
+      : <img src={defaultFolderIcon} alt="Folder closed" width="16" height="16" />;
+  };
+
+  // 加载目录树
+  useEffect(() => {
+    const fetchFileTree = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/files/tree`, {
+          params: { path: rootDir }
+        });
+        setFiles(response.data);
+      } catch (err) {
+        console.error('加载文件树失败:', err);
+        setError('无法加载文件树，请检查服务器连接');
+
+        // 开发阶段：使用模拟数据
+        if (process.env.NODE_ENV === 'development') {
+          console.log('使用模拟数据...');
+          setFiles([
+            {
+              name: 'projects',
+              path: `${rootDir}/projects`,
+              type: 'directory',
+              children: [
+                { name: 'hello.c', path: `${rootDir}/projects/hello.c`, type: 'file' },
+                { name: 'example.cpp', path: `${rootDir}/projects/example.cpp`, type: 'file' }
+              ]
+            },
+            {
+              name: 'python_examples',
+              path: `${rootDir}/python_examples`,
+              type: 'directory',
+              children: [
+                { name: 'hello.py', path: `${rootDir}/python_examples/hello.py`, type: 'file' }
+              ]
+            }
+          ]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFileTree();
+  }, [rootDir]);
+
+  // 切换文件夹展开状态
+  const toggleFolder = (folderPath: string) => {
     setExpandedFolders(prev => ({
       ...prev,
-      [path]: !prev[path],
-    }))
-  }
+      [folderPath]: !prev[folderPath]
+    }));
+  };
 
-  const renderFolder = (folder: any, path = '', depth = 0) => {
-    return Object.entries(folder).map(([name, content]) => {
-      const fullPath = path ? `${path}/${name}` : name
-  
-      if (typeof content === 'object') {
-        const isOpen = expandedFolders[fullPath] ?? true
-  
-        return (
-          <div key={fullPath} className="folder">
-            <div
-              className="folder-name flex items-center cursor-pointer px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm font-medium text-gray-800 dark:text-gray-100"
-              style={{ marginLeft: `${depth * 16}px` }} // 每层 +16px 缩进
-              onClick={() => toggleFolder(fullPath)}
-            >
-              <span className="mr-2">{isOpen ? '📂' : '📁'}</span>
-              {name}
-            </div>
-            {isOpen && (
-              <div className="border-l border-gray-300 dark:border-gray-600">
-                {renderFolder(content, fullPath, depth + 1)}
-              </div>
-            )}
-          </div>
-        )
-      } else {
-        return (
+  // 打开文件
+  const openFile = async (file: FileNode) => {
+    try {
+      setActiveFile(file.path);
+
+      // 先显示加载状态
+      updateEditorContent('// 正在加载文件内容...');
+
+      // 从服务器获取文件内容
+      const response = await axios.get(`${API_BASE_URL}/files/content`, {
+        params: { path: file.path }
+      });
+
+      updateEditorContent(response.data.content);
+    } catch (err) {
+      console.error('打开文件失败:', err);
+      updateEditorContent(`// 加载文件内容失败: ${file.path}\n// 错误: ${err}`);
+    }
+  };
+
+  // 递归渲染文件树
+  const renderFileTree = (nodes: FileNode[], depth = 0) => {
+    return nodes.map(node => {
+      const isDirectory = node.type === 'directory';
+      const isExpanded = expandedFolders[node.path] || false;
+
+      return (
+        <div key={node.path} style={{ marginLeft: `${depth * 12}px` }}>
           <div
-            key={fullPath}
-            className={`file flex items-center px-2 py-1 rounded text-sm cursor-pointer transition-colors ${
-              activeFile === fullPath
-                ? 'bg-blue-100 text-blue-700 font-semibold dark:bg-blue-900 dark:text-white'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-            }`}
-            style={{ marginLeft: `${depth * 16}px` }} // 同样缩进
-            onClick={() => setActiveFile(fullPath)}
+            className={`file-item ${activeFile === node.path ? 'active' : ''}`}
+            onClick={() => isDirectory ? toggleFolder(node.path) : openFile(node)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              borderRadius: '4px',
+              backgroundColor: activeFile === node.path ? 'var(--primary-light)' : 'transparent'
+            }}
           >
-            <span className="mr-2">{getFileIcon(name)}</span>
-            {name}
+            {isDirectory
+              ? getFolderIcon(isExpanded)
+              : getFileIcon(node.name)
+            }
+            <span style={{ marginLeft: '6px' }}>{node.name}</span>
           </div>
-        )
-      }
-    })
-  }
-  
+
+          {isDirectory && isExpanded && node.children && (
+            <div className="folder-children">
+              {renderFileTree(node.children, depth + 1)}
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
 
   return (
-    <div className="file-explorer text-sm font-mono bg-gray-50 dark:bg-gray-800 p-2 h-full overflow-auto">
-      {renderFolder(fileStructure)}
-    </div>
-  )
-}
+    <div className="file-explorer" style={{ padding: '4px 0' }}>
+      {isLoading && <div className="loading-message">加载文件中...</div>}
 
-export default FileExplorer
+      {error && (
+        <div className="error-message" style={{ color: 'red', padding: '8px' }}>
+          {error}
+        </div>
+      )}
+
+      {!isLoading && !error && files.length > 0 && (
+        <div>
+          <div style={{ padding: '4px 8px', fontWeight: 'bold', color: 'var(--text-mid)' }}>
+            /data/My_Desktop/User_Coding
+          </div>
+          {renderFileTree(files)}
+        </div>
+      )}
+
+      {!isLoading && !error && files.length === 0 && (
+        <div className="empty-directory" style={{ padding: '8px' }}>
+          目录为空
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FileExplorer;

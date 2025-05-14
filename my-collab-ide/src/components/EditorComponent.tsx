@@ -1,12 +1,14 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { editor } from 'monaco-editor';
+import path from 'path-browserify';
 import './EditorComponent.css';
 import AIChatPanel from './AIChatPanel'; // 导入新的 AI 聊天组件
 import InviteCollaborator from './InviteCollaborator';
 import FileExplorer from './FileExplorer';
 import RunAndDebug from './RunAndDebug';
 import Search from './Search'
+import axios from 'axios';
 
 // 模拟图标导入
 import explorerIcon from '../icons/icons8-文件夹-40.png';
@@ -34,12 +36,10 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     onChange
 }) => {
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-    const [, setValue] = useState<string | undefined>(defaultValue);
-    // const [value, setValue] = useState<string | undefined>(defaultValue);
-    const [activeFile, setActiveFile] = useState("App.js");
+    const [editorContent, setEditorContent] = useState<string>(defaultValue);
+    const [editorLanguage, setEditorLanguage] = useState<string>(defaultLanguage);
+    const [activeFile, setActiveFile] = useState<string>(""); // 当前活动文件路径
     const [activePanelTab, setActivePanelTab] = useState("终端");
-    // <FileExplorer activeFile={activeFile} setActiveFile={setActiveFile} />
-
 
     // 拖动状态
     const [isDraggingActivityBar, setIsDraggingActivityBar] = useState(false);
@@ -50,6 +50,16 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const [panelHeight, setPanelHeight] = useState(200);
     const [aiPanelWidth, setAiPanelWidth] = useState(320); // 保留AI面板宽度状态
 
+    // 终端状态
+    const [terminalOutput, setTerminalOutput] = useState<string[]>([
+        "$ ssh root@8.137.125.47",
+        "已连接到远程服务器",
+        "正在访问 /data/My_Desktop/User_Coding",
+        "可开始编辑远程文件"
+    ]);
+    const [terminalCommand, setTerminalCommand] = useState('');
+    const terminalRef = useRef<HTMLDivElement>(null);
+
     // 引用DOM元素
     const activityBarRef = useRef<HTMLDivElement>(null);
     const sidebarRef = useRef<HTMLDivElement>(null);
@@ -58,6 +68,222 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const sidebarResizerRef = useRef<HTMLDivElement>(null);
     const panelResizerRef = useRef<HTMLDivElement>(null);
 
+    // API基础URL
+    const API_BASE_URL = 'http://localhost:3001/api';
+
+    const saveFile = async () => {
+        if (!activeFile) {
+            alert('没有打开的文件');
+            return;
+        }
+
+        try {
+            await axios.post(
+                `${API_BASE_URL}/files/save?path=${encodeURIComponent(activeFile)}`,
+                editorContent,
+                {
+                    headers: { 'Content-Type': 'text/plain' }
+                }
+            );
+
+            // 显示保存成功消息
+            setTerminalOutput(prev => [...prev, `已保存文件: ${activeFile}`]);
+        } catch (error) {
+            console.error('保存文件失败:', error);
+            setTerminalOutput(prev => [...prev, `保存失败: ${activeFile}, 错误: ${error}`]);
+        }
+    };
+
+    // 执行命令函数
+    const executeCommand = async (command: string) => {
+        if (!command.trim()) return;
+
+        setTerminalOutput(prev => [...prev, `$ ${command}`]);
+        setTerminalCommand('');
+
+        try {
+            // 在实际环境中，通过API执行命令
+            const response = await axios.post(`${API_BASE_URL}/files/execute`, {
+                command,
+                cwd: activeFile ? path.dirname(activeFile) : undefined
+            });
+
+            const { stdout, stderr, code } = response.data;
+
+            if (stdout) {
+                setTerminalOutput(prev => [...prev, ...stdout.split('\n').filter(Boolean)]);
+            }
+
+            if (stderr) {
+                setTerminalOutput(prev => [...prev, ...stderr.split('\n').filter(Boolean)]);
+            }
+
+            setTerminalOutput(prev => [...prev, `命令执行完成，退出代码: ${code}`]);
+        } catch (error) {
+            console.error('执行命令失败:', error);
+            setTerminalOutput(prev => [...prev, `错误: 执行命令失败`]);
+        }
+
+        // 滚动终端到底部
+        if (terminalRef.current) {
+            terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+        }
+    };
+
+    // 编译当前文件
+    const compileCurrentFile = async () => {
+        if (!activeFile) {
+            setTerminalOutput(prev => [...prev, "错误: 没有打开的文件"]);
+            return;
+        }
+
+        const fileName = activeFile.split('/').pop() || '';
+        const ext = fileName.split('.').pop()?.toLowerCase();
+        const outputName = fileName.replace(`.${ext}`, '');
+
+        let command = '';
+        switch (ext) {
+            case 'c':
+                command = `gcc "${fileName}" -o "${outputName}" && echo "编译成功: ${outputName}"`;
+                break;
+            case 'cpp':
+            case 'cc':
+            case 'cxx':
+                command = `g++ "${fileName}" -o "${outputName}" && echo "编译成功: ${outputName}"`;
+                break;
+            case 'java':
+                command = `javac "${fileName}" && echo "编译成功: ${outputName}.class"`;
+                break;
+            case 'py':
+                command = `python3 -m py_compile "${fileName}" && echo "Python文件无需编译，可直接运行"`;
+                break;
+            default:
+                setTerminalOutput(prev => [...prev, `不支持编译此类型的文件: ${ext}`]);
+                return;
+        }
+
+        setActivePanelTab('终端');
+        await executeCommand(command);
+    };
+
+    // 运行当前文件
+    const runCurrentFile = async () => {
+        if (!activeFile) {
+            setTerminalOutput(prev => [...prev, "错误: 没有打开的文件"]);
+            return;
+        }
+
+        const fileName = activeFile.split('/').pop() || '';
+        const ext = fileName.split('.').pop()?.toLowerCase();
+        const outputName = fileName.replace(`.${ext}`, '');
+
+        let command = '';
+        switch (ext) {
+            case 'c':
+            case 'cpp':
+            case 'cc':
+            case 'cxx':
+                command = `./${outputName}`;
+                break;
+            case 'java':
+                command = `java ${outputName}`;
+                break;
+            case 'py':
+                command = `python3 "${fileName}"`;
+                break;
+            case 'js':
+                command = `node "${fileName}"`;
+                break;
+            case 'sh':
+                command = `bash "${fileName}"`;
+                break;
+            default:
+                setTerminalOutput(prev => [...prev, `不支持运行此类型的文件: ${ext}`]);
+                return;
+        }
+
+        setActivePanelTab('终端');
+        await executeCommand(command);
+    };
+
+    // 添加键盘快捷键支持
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ctrl+S 或 Cmd+S (Mac)
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveFile();
+            }
+            // F5 运行
+            if (e.key === 'F5') {
+                e.preventDefault();
+                runCurrentFile();
+            }
+            // F6 编译
+            if (e.key === 'F6') {
+                e.preventDefault();
+                compileCurrentFile();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [activeFile, editorContent]); // 确保依赖项正确
+
+    // 设置编辑器语言
+    const getLanguageFromFileName = (filename: string): string => {
+        const ext = filename.split('.').pop()?.toLowerCase();
+        switch (ext) {
+            case 'js': return 'javascript';
+            case 'ts': return 'typescript';
+            case 'tsx': return 'typescript';
+            case 'jsx': return 'javascript';
+            case 'html': return 'html';
+            case 'css': return 'css';
+            case 'py': return 'python';
+            case 'java': return 'java';
+            case 'c': return 'c';
+            case 'cpp':
+            case 'cc':
+            case 'cxx': return 'cpp';
+            case 'h': return 'c';
+            case 'hpp': return 'cpp';
+            case 'md': return 'markdown';
+            case 'json': return 'json';
+            case 'txt': return 'plaintext';
+            case 'sh': return 'shell';
+            case 'xml': return 'xml';
+            case 'sql': return 'sql';
+            case 'go': return 'go';
+            case 'rb': return 'ruby';
+            case 'php': return 'php';
+            default: return 'plaintext';
+        }
+    };
+
+    // 更新编辑器内容
+    const updateEditorContent = (content: string) => {
+        setEditorContent(content);
+        if (editorRef.current) {
+            editorRef.current.setValue(content);
+        }
+    };
+
+    // 当活动文件变化时，更新编辑器语言
+    useEffect(() => {
+        if (activeFile) {
+            const lang = getLanguageFromFileName(activeFile);
+            setEditorLanguage(lang);
+            setTerminalOutput(prev => [...prev, `打开文件: ${activeFile}`]);
+        }
+    }, [activeFile]);
+
+    // 自动滚动终端到底部
+    useEffect(() => {
+        if (terminalRef.current) {
+            terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+        }
+    }, [terminalOutput]);
 
     const handleEditorDidMount: OnMount = (editor) => {
         editorRef.current = editor;
@@ -65,7 +291,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     };
 
     const handleEditorChange = (value: string | undefined) => {
-        setValue(value);
+        setEditorContent(value || '');
         if (onChange) {
             onChange(value);
         }
@@ -144,15 +370,6 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         }
     }, [activityBarWidth, sidebarWidth, panelHeight, aiPanelWidth]);
 
-    // // 生成行号
-    // const generateLineNumbers = () => {
-    //     if (!value) return [];
-    //     const lines = value.split('\n');
-    //     return lines.map((_, index) => (
-    //         <div key={index} className="line-number">{index + 1}</div>
-    //     ));
-    // };
-
     // 确定拖动时遮罩层的样式
     const getOverlayClassName = () => {
         if (isDraggingActivityBar) return "resize-overlay dragging-activity-bar";
@@ -160,8 +377,6 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         if (isDraggingPanel) return "resize-overlay dragging-panel";
         return "resize-overlay";
     };
-
-
 
     // 左边的活动栏和侧边栏的切换逻辑
     const [activeTab, setActiveTab] = useState('explorer')
@@ -233,7 +448,6 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                         className="activity-icon"
                         onClick={toggleSettingsMenu}
                         ref={settingsRef}
-                    // style={{ position: 'relative' }}
                     >
                         <img src={settingsIcon} alt="Settings" />
                     </div>
@@ -248,10 +462,10 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                                 backgroundColor: 'var(--surface-lightest)',
                                 color: 'var(--text-dark)',
                                 borderRadius: '6px',
-                                boxShadow: 'var(--shadow-md)',                   // 使用你定义的中等阴影
-                                border: '1px solid var(--border-light)',         // 加一圈浅灰边框
+                                boxShadow: 'var(--shadow-md)',
+                                border: '1px solid var(--border-light)',
                                 zIndex: 9999,
-                                transition: 'var(--transition-default)'        // 添加过渡动画
+                                transition: 'var(--transition-default)'
                             }}
                         >
                             {[
@@ -298,7 +512,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                     style={{ width: `${sidebarWidth}px` }}
                 >
                     <div className="sidebar-header">
-                        <span>EXPLORER</span>
+                        <span>EXPLORER - 远程服务器</span>
                         <div className="sidebar-actions">
                             <span>...</span>
                         </div>
@@ -306,7 +520,11 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                     <div className="sidebar-content">
                         {activeTab === 'explorer' && (
                             <div className="file-explorer">
-                                <FileExplorer activeFile={activeFile} setActiveFile={setActiveFile} />
+                                <FileExplorer
+                                    activeFile={activeFile}
+                                    setActiveFile={setActiveFile}
+                                    updateEditorContent={updateEditorContent}
+                                />
                             </div>
                         )}
                         {activeTab === 'search' && (
@@ -343,14 +561,60 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                         <div className="editor-area">
                             <div className="editor-tabs">
                                 <div className="editor-tab active">
-                                    {activeFile}
+                                    {activeFile ? activeFile.split('/').pop() : "未打开文件"}
                                 </div>
+                                {activeFile && (
+                                    <div className="editor-actions" style={{ display: 'flex', marginLeft: 'auto' }}>
+                                        <div
+                                            className="editor-action-button"
+                                            onClick={saveFile}
+                                            title="保存 (Ctrl+S)"
+                                            style={{
+                                                padding: '0 10px',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                color: 'var(--primary-blue)'
+                                            }}
+                                        >
+                                            💾 保存
+                                        </div>
+                                        <div
+                                            className="editor-action-button"
+                                            onClick={compileCurrentFile}
+                                            title="编译 (F6)"
+                                            style={{
+                                                padding: '0 10px',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                color: 'var(--primary-blue)'
+                                            }}
+                                        >
+                                            🔨 编译
+                                        </div>
+                                        <div
+                                            className="editor-action-button"
+                                            onClick={runCurrentFile}
+                                            title="运行 (F5)"
+                                            style={{
+                                                padding: '0 10px',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                color: 'var(--primary-blue)'
+                                            }}
+                                        >
+                                            ▶️ 运行
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="editor-content">
                                 <Editor
                                     height="100%"
-                                    defaultLanguage={defaultLanguage}
-                                    defaultValue={defaultValue}
+                                    language={editorLanguage}
+                                    value={editorContent}
                                     theme={theme}
                                     onChange={handleEditorChange}
                                     onMount={handleEditorDidMount}
@@ -358,7 +622,12 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                                         minimap: { enabled: true },
                                         scrollBeyondLastLine: false,
                                         fontSize: 14,
-                                        automaticLayout: true
+                                        automaticLayout: true,
+                                        lineNumbers: 'on',
+                                        folding: true,
+                                        renderLineHighlight: 'all',
+                                        tabSize: 4,
+                                        insertSpaces: true
                                     }}
                                 />
                             </div>
@@ -404,20 +673,35 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                             </div>
                             <div className="panel-content">
                                 {activePanelTab === '终端' && (
-                                    <div className="terminal">
-                                        <div className="terminal-line">$ npm start</div>
-                                        <div className="terminal-line">Starting development server...</div>
-                                        <div className="terminal-line">Compiled successfully!</div>
-                                        <div className="terminal-line">
-                                            You can now view my-app in the browser.
+                                    <div className="terminal" ref={terminalRef} style={{ height: '100%', overflow: 'auto' }}>
+                                        {terminalOutput.map((line, index) => (
+                                            <div key={index} className="terminal-line">
+                                                {line}
+                                            </div>
+                                        ))}
+                                        <div className="terminal-input-line" style={{ display: 'flex', alignItems: 'center' }}>
+                                            <span>$ </span>
+                                            <input
+                                                type="text"
+                                                value={terminalCommand}
+                                                onChange={(e) => setTerminalCommand(e.target.value)}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        executeCommand(terminalCommand);
+                                                    }
+                                                }}
+                                                placeholder="输入命令..."
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    color: 'inherit',
+                                                    fontFamily: 'inherit',
+                                                    fontSize: 'inherit',
+                                                    width: 'calc(100% - 20px)',
+                                                    outline: 'none'
+                                                }}
+                                            />
                                         </div>
-                                        <div className="terminal-line">
-                                            Local:            http://localhost:3000
-                                        </div>
-                                        <div className="terminal-line">
-                                            On Your Network:  http://192.168.1.7:3000
-                                        </div>
-                                        <div className="terminal-line blink">$ </div>
                                     </div>
                                 )}
                                 {activePanelTab === '问题' && (
@@ -427,12 +711,16 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                                 )}
                                 {activePanelTab === '输出' && (
                                     <div className="output-panel">
-                                        <div>构建成功 - 0 警告, 0 错误</div>
+                                        <div>已成功连接到远程服务器</div>
+                                        <div>远程服务器: 8.137.125.47</div>
+                                        <div>工作目录: /data/My_Desktop/User_Coding</div>
                                     </div>
                                 )}
                                 {activePanelTab === '调试控制台' && (
                                     <div className="debug-console">
                                         <div>调试会话未启动</div>
+                                        <div>按 F5 运行当前文件</div>
+                                        <div>按 F6 编译当前文件</div>
                                     </div>
                                 )}
                             </div>
@@ -451,9 +739,10 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                             </div>
                         </div>
                         <div className="status-items-right">
+                            <div className="status-item">远程: 8.137.125.47</div>
                             <div className="status-item">UTF-8</div>
                             <div className="status-item">LF</div>
-                            <div className="status-item">{defaultLanguage}</div>
+                            <div className="status-item">{editorLanguage}</div>
                             <div className="status-item status-position">行 1, 列 1</div>
                         </div>
                     </div>

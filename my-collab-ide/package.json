@@ -4,16 +4,23 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "start": "vite",
+    "dev": "concurrently \"vite\" \"npm run server\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "cd server && npm run dev"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@types/path-browserify": "^1.0.3",
+    "axios": "^1.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "path-browserify": "^1.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "ssh2": "^1.16.0",
     "ws": "^8.18.2"
   },
   "devDependencies": {
@@ -24,6 +31,7 @@
     "@types/react-dom": "^19.0.4",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^8.2.2",
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
