@@ -117,6 +117,36 @@ const saveFileContent = async (filePath, content) => {
     });
 };
 
+// 添加创建目录的方法
+const createDirectory = async (dirPath) => {
+    const conn = await createConnection();
+
+    return new Promise((resolve, reject) => {
+        conn.sftp((err, sftp) => {
+            if (err) {
+                conn.end();
+                return reject(err);
+            }
+
+            sftp.mkdir(dirPath, { mode: 0o755 }, (err) => {
+                conn.end();
+
+                if (err) {
+                    // 如果目录已存在，我们可以认为创建成功
+                    if (err.code === 4) { // 4是SFTP_FAILURE，可能表示目录已存在
+                        console.log(`目录已存在: ${dirPath}`);
+                        resolve({ success: true, message: '文件夹已存在' });
+                    } else {
+                        reject(err);
+                    }
+                } else {
+                    resolve({ success: true, message: '文件夹创建成功' });
+                }
+            });
+        });
+    });
+};
+
 // 递归获取完整目录结构
 const getDirectoryTree = async (dirPath, depth = 0) => {
     // 限制递归深度，避免过于庞大的请求
@@ -179,6 +209,7 @@ const executeCommand = async (command) => {
 };
 
 module.exports = {
+    createDirectory,
     listDirectory,
     getFileContent,
     saveFileContent,

@@ -80,13 +80,13 @@
 
 /* 侧边栏 */
 .sidebar {
-    width: 250px;
+    width: 320px;
     background-color: var(--surface-light);
     border-right: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
     min-width: 150px;
-    max-width: 400px;
+    max-width: 500px;
     resize: horizontal;
     overflow: auto;
 }
@@ -353,7 +353,7 @@
 /* 响应式设计 */
 @media (max-width: 768px) {
     .sidebar {
-        width: 200px;
+        width: 320px;
     }
 
     .activity-bar {
@@ -673,4 +673,94 @@
     /* 使图标在深色背景上更明显 */
 }
 
+/* 标签栏容器 */
+.tabs-container {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    flex-grow: 1;
+    max-width: calc(100% - 150px);
+    /* 保留空间给操作按钮 */
+}
 
+.tabs-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.tabs-container::-webkit-scrollbar-thumb {
+    background-color: var(--border-light);
+    border-radius: 2px;
+}
+
+/* 修改标签样式 */
+.editor-tab {
+    padding: 6px 12px;
+    padding-right: 8px;
+    /* 为关闭按钮留出空间 */
+    border-right: 1px solid var(--border-light);
+    cursor: pointer;
+    background-color: var(--surface-mid);
+    color: var(--text-mid);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    margin-right: 2px;
+    margin-top: 2px;
+    transition: var(--transition-default);
+    display: flex;
+    align-items: center;
+    max-width: 200px;
+    min-width: 100px;
+    position: relative;
+}
+
+.editor-tab .tab-filename {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.editor-tab .tab-close {
+    opacity: 0.6;
+    font-size: 16px;
+    margin-left: 8px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.editor-tab .tab-close:hover {
+    background-color: var(--surface-dark);
+    opacity: 1;
+}
+
+.editor-tab.active {
+    background-color: var(--surface-lightest);
+    border-top: 2px solid var(--primary-blue);
+    color: var(--primary-dark);
+}
+
+/* 修改操作按钮样式 */
+.editor-actions {
+    display: flex;
+    margin-left: auto;
+    align-items: center;
+    padding-right: 8px;
+}
+
+.editor-action-button {
+    padding: 0 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--primary-blue);
+    height: 28px;
+    border-radius: 4px;
+}
+
+.editor-action-button:hover {
+    background-color: var(--primary-light);
+}

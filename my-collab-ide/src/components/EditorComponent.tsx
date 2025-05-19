@@ -18,6 +18,9 @@ import debugIcon from '../icons/icons8-播放-40.png';
 import extensionsIcon from '../icons/icons8-用户组-40.png';
 import settingsIcon from '../icons/icons8-设置-40.png';
 
+// API基础URL
+const API_BASE_URL = 'http://localhost:3001/api';
+
 interface EditorComponentProps {
     defaultLanguage?: string;
     defaultValue?: string;
@@ -41,6 +44,16 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const [activeFile, setActiveFile] = useState<string>(""); // 当前活动文件路径
     const [activePanelTab, setActivePanelTab] = useState("终端");
 
+    // 新增：追踪打开的所有文件和文件内容
+    const [openFiles, setOpenFiles] = useState<string[]>([]);
+    const [fileContents, setFileContents] = useState<Record<string, string>>({});
+
+    // 添加文件内容缓存 - 移动到组件顶部
+    const [fileCache, setFileCache] = useState<Record<string, {
+        content: string,
+        timestamp: number
+    }>>({});
+
     // 拖动状态
     const [isDraggingActivityBar, setIsDraggingActivityBar] = useState(false);
     const [isDraggingSidebar, setIsDraggingSidebar] = useState(false);
@@ -49,6 +62,119 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const [sidebarWidth, setSidebarWidth] = useState(250);
     const [panelHeight, setPanelHeight] = useState(200);
     const [aiPanelWidth, setAiPanelWidth] = useState(320); // 保留AI面板宽度状态
+
+    // 新增：打开一个新的文件标签
+    const openFileTab = async (filePath: string, content?: string) => {
+        // 如果文件已经打开，只需激活它
+        if (!openFiles.includes(filePath)) {
+            setOpenFiles(prev => [...prev, filePath]);
+
+            // 检查缓存是否有效（10分钟内的缓存）
+            const cacheEntry = fileCache[filePath];
+            const isCacheValid = cacheEntry &&
+                (Date.now() - cacheEntry.timestamp < 10 * 60 * 1000);
+
+            // 如果缓存有效，使用缓存内容
+            if (isCacheValid && !content) {
+                content = cacheEntry.content;
+            }
+
+            // 否则如果没有提供内容，需要从服务器获取
+            else if (!content) {
+                // 在openFileTab函数中改进错误处理
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/files/content`, {
+                        params: { path: filePath },
+                        timeout: 5000
+                    });
+                    content = response.data.content;
+
+                    // 更新缓存
+                    setFileCache(prev => ({
+                        ...prev,
+                        [filePath]: {
+                            content: content || '', // 提供默认空字符串，确保不为 undefined
+                            timestamp: Date.now()
+                        }
+                    }));
+                } catch (error: any) { // 显式类型标注
+                    console.error('获取文件内容失败:', error);
+                    content = `// 无法加载文件内容: ${filePath}\n// 错误: ${error.message || '未知错误'}`;
+                }
+            }
+
+            // 保存文件内容
+            setFileContents(prev => ({
+                ...prev,
+                [filePath]: content || ''
+            }));
+        }
+
+        // 激活文件标签
+        setActiveFile(filePath);
+
+        // 重要：同时更新编辑器内容
+        const fileContent = content || fileContents[filePath] || '';
+        setEditorContent(fileContent);
+
+        // 直接更新编辑器的值
+        if (editorRef.current) {
+            editorRef.current.setValue(fileContent);
+        }
+
+        // 设置语言模式
+        setEditorLanguage(getLanguageFromFileName(filePath));
+    };
+
+    // 新增：关闭文件标签
+    const closeFileTab = (filePath: string, event?: React.MouseEvent) => {
+        if (event) {
+            event.stopPropagation();  // 防止触发标签切换
+        }
+
+        // 从打开文件列表中移除
+        const newOpenFiles = openFiles.filter(file => file !== filePath);
+        setOpenFiles(newOpenFiles);
+
+        // 如果关闭的是当前活动文件，需要激活其他文件
+        if (filePath === activeFile) {
+            const nextFileIndex = openFiles.indexOf(filePath);
+            // 尝试激活下一个文件，或前一个，或置空
+            if (newOpenFiles.length > 0) {
+                const nextFile = newOpenFiles[Math.min(nextFileIndex, newOpenFiles.length - 1)];
+                setActiveFile(nextFile);
+                updateEditorContent(fileContents[nextFile] || '');
+            } else {
+                setActiveFile('');
+                updateEditorContent('// 在这里开始编写代码\n');
+            }
+        }
+    };
+
+    // 修改：当切换到一个已打开的文件时
+    const switchToFile = (filePath: string) => {
+        if (openFiles.includes(filePath)) {
+            setActiveFile(filePath);
+
+            // 更新编辑器内容 - 确保从文件内容缓存中获取
+            const content = fileContents[filePath];
+            if (content !== undefined) {
+                setEditorContent(content);
+
+                // 重要：直接更新编辑器的值
+                if (editorRef.current) {
+                    editorRef.current.setValue(content);
+                }
+
+                // 根据文件扩展名设置语言
+                setEditorLanguage(getLanguageFromFileName(filePath));
+            }
+        }
+    };
+
+    const handleFileOpen = async (filePath: string, content?: string) => {
+        await openFileTab(filePath, content);
+    };
 
     // 终端状态
     const [terminalOutput, setTerminalOutput] = useState<string[]>([
@@ -68,9 +194,6 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     const sidebarResizerRef = useRef<HTMLDivElement>(null);
     const panelResizerRef = useRef<HTMLDivElement>(null);
 
-    // API基础URL
-    const API_BASE_URL = 'http://localhost:3001/api';
-
     const saveFile = async () => {
         if (!activeFile) {
             alert('没有打开的文件');
@@ -78,9 +201,10 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         }
 
         try {
+            // 保存当前活动文件的内容
             await axios.post(
                 `${API_BASE_URL}/files/save?path=${encodeURIComponent(activeFile)}`,
-                editorContent,
+                fileContents[activeFile] || editorContent, // 先从文件内容缓存中读取
                 {
                     headers: { 'Content-Type': 'text/plain' }
                 }
@@ -267,6 +391,14 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         if (editorRef.current) {
             editorRef.current.setValue(content);
         }
+
+        // 如果是已打开的文件，同时更新缓存
+        if (activeFile) {
+            setFileContents(prev => ({
+                ...prev,
+                [activeFile]: content
+            }));
+        }
     };
 
     // 当活动文件变化时，更新编辑器语言
@@ -285,15 +417,34 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         }
     }, [terminalOutput]);
 
-    const handleEditorDidMount: OnMount = (editor) => {
+    // 处理编辑器挂载
+    const handleEditorDidMount: OnMount = (editor, monaco) => {
         editorRef.current = editor;
-        editor.focus();
+
+        // 如果当前有活动文件，设置编辑器内容
+        if (activeFile && fileContents[activeFile]) {
+            editor.setValue(fileContents[activeFile]);
+        } else {
+            editor.setValue(defaultValue);
+        }
     };
 
+    // 编辑器内容变化处理
     const handleEditorChange = (value: string | undefined) => {
-        setEditorContent(value || '');
+        const newValue = value || '';
+        setEditorContent(newValue);
+
+        // 更新当前活动文件的内容
+        if (activeFile) {
+            setFileContents(prev => ({
+                ...prev,
+                [activeFile]: newValue
+            }));
+        }
+
+        // 调用外部onChange回调（如果存在）
         if (onChange) {
-            onChange(value);
+            onChange(newValue);
         }
     };
 
@@ -523,6 +674,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                                 <FileExplorer
                                     activeFile={activeFile}
                                     setActiveFile={setActiveFile}
+                                    openFileTab={openFileTab}
                                     updateEditorContent={updateEditorContent}
                                 />
                             </div>
@@ -560,22 +712,39 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                     <div className="main-content">
                         <div className="editor-area">
                             <div className="editor-tabs">
-                                <div className="editor-tab active">
-                                    {activeFile ? activeFile.split('/').pop() : "未打开文件"}
+                                {/* 文件标签区 */}
+                                <div className="tabs-container">
+                                    {openFiles.length > 0 ? (
+                                        openFiles.map((file) => (
+                                            <div
+                                                key={file}
+                                                className={`editor-tab ${activeFile === file ? 'active' : ''}`}
+                                                onClick={() => switchToFile(file)}
+                                            >
+                                                <span className="tab-filename">{file.split('/').pop()}</span>
+                                                <span
+                                                    className="tab-close"
+                                                    onClick={(e) => closeFileTab(file, e)}
+                                                    title="关闭"
+                                                >
+                                                    ×
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="editor-tab active">
+                                            <span>未打开文件</span>
+                                        </div>
+                                    )}
                                 </div>
+
+                                {/* 编辑器操作按钮 */}
                                 {activeFile && (
-                                    <div className="editor-actions" style={{ display: 'flex', marginLeft: 'auto' }}>
+                                    <div className="editor-actions">
                                         <div
                                             className="editor-action-button"
                                             onClick={saveFile}
                                             title="保存 (Ctrl+S)"
-                                            style={{
-                                                padding: '0 10px',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                color: 'var(--primary-blue)'
-                                            }}
                                         >
                                             💾 保存
                                         </div>
@@ -583,13 +752,6 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                                             className="editor-action-button"
                                             onClick={compileCurrentFile}
                                             title="编译 (F6)"
-                                            style={{
-                                                padding: '0 10px',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                color: 'var(--primary-blue)'
-                                            }}
                                         >
                                             🔨 编译
                                         </div>
@@ -597,13 +759,6 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                                             className="editor-action-button"
                                             onClick={runCurrentFile}
                                             title="运行 (F5)"
-                                            style={{
-                                                padding: '0 10px',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                color: 'var(--primary-blue)'
-                                            }}
                                         >
                                             ▶️ 运行
                                         </div>
@@ -621,13 +776,9 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                                     options={{
                                         minimap: { enabled: true },
                                         scrollBeyondLastLine: false,
-                                        fontSize: 14,
                                         automaticLayout: true,
-                                        lineNumbers: 'on',
-                                        folding: true,
-                                        renderLineHighlight: 'all',
-                                        tabSize: 4,
-                                        insertSpaces: true
+                                        fontFamily: 'JetBrains Mono, Consolas, Monaco, monospace',
+                                        fontSize: 14
                                     }}
                                 />
                             </div>

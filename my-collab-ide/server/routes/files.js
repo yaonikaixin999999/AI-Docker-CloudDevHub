@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs/promises');
 const path = require('path');
 const sshService = require('../services/sshService');
 require('dotenv').config();
@@ -112,6 +113,38 @@ router.post('/execute', async (req, res) => {
     } catch (error) {
         console.error('执行命令失败:', error);
         res.status(500).json({ error: '执行命令失败' });
+    }
+});
+
+// 创建文件或目录
+router.post('/create', async (req, res) => {
+    try {
+        const { path: filePath, type, content } = req.body;
+
+        if (!filePath) {
+            return res.status(400).json({ error: '缺少路径参数' });
+        }
+
+        if (!isPathSafe(filePath)) {
+            return res.status(403).json({ error: '访问被拒绝：请求的路径不在允许的范围内' });
+        }
+
+        let result;
+        if (type === 'file') {
+            // 创建文件，使用sshService
+            result = await sshService.saveFileContent(filePath, content || '');
+            res.json({ success: true, message: '文件创建成功' });
+        } else if (type === 'directory') {
+            // 创建目录，使用sshService
+            // 注意：需要在sshService中添加创建目录的方法
+            result = await sshService.createDirectory(filePath);
+            res.json({ success: true, message: '文件夹创建成功' });
+        } else {
+            res.status(400).json({ error: '无效的类型参数，必须为 file 或 directory' });
+        }
+    } catch (error) {
+        console.error('创建文件/目录错误:', error);
+        res.status(500).json({ error: `服务器错误: ${error.message}` });
     }
 });
 

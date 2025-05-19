@@ -6,6 +6,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 安装 nginx 和所需的编程环境
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    nodejs \
+    npm \
     nginx \
     build-essential \
     python3 \
@@ -42,16 +44,24 @@ RUN echo "include /etc/nginx/conf.d/*.conf;" > /etc/nginx/sites-enabled/default
 # 暴露 80 端口
 EXPOSE 80
 
+# 复制前后端文件
+COPY ./server/ /app/server/
+
+# 安装后端依赖
+WORKDIR /app/server
+RUN npm install
+
 # 创建启动脚本
 RUN echo '#!/bin/bash\n\
     echo "Starting Nginx..."\n\
     nginx -t\n\
     service nginx start\n\
     echo "Nginx started!"\n\
+    echo "Starting Node.js server..."\n\
+    cd /app/server && node index.js &\n\
+    echo "Node.js server started!"\n\
     echo "Content of /var/www/html:"\n\
     ls -la /var/www/html\n\
-    echo "Nginx configuration:"\n\
-    cat /etc/nginx/conf.d/default.conf\n\
     echo "Watching logs..."\n\
     tail -f /var/log/nginx/access.log /var/log/nginx/error.log\n' > /start.sh && \
     chmod +x /start.sh
