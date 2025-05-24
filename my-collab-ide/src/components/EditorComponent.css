@@ -764,3 +764,36 @@
 .editor-action-button:hover {
     background-color: var(--primary-light);
 }
+
+/* 协作指示器样式 */
+.collaboration-indicator {
+    position: fixed;
+    top: 10px;
+    right: 350px;
+    background: var(--primary-blue);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1000;
+    box-shadow: var(--shadow-md);
+}
+
+.collaborators-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.collaborator-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+/* 协作状态下的编辑器边框 */
+.editor-content.collaborating {
+    border: 2px solid var(--primary-blue);
+    border-radius: 4px;
+}

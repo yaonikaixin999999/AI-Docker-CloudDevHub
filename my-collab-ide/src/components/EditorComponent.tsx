@@ -1,7 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { editor } from 'monaco-editor';
 import path from 'path-browserify';
+import { debounce } from 'lodash';
 import './EditorComponent.css';
 import AIChatPanel from './AIChatPanel'; // 导入新的 AI 聊天组件
 import InviteCollaborator from './InviteCollaborator';
@@ -9,6 +10,8 @@ import FileExplorer from './FileExplorer';
 import RunAndDebug from './RunAndDebug';
 import Search from './Search'
 import axios from 'axios';
+import CompilationStatus from './CompilationStatus';
+import { collaborationService, CollaborationUser, FileChange } from '../services/collaborationService';
 
 // 模拟图标导入
 import explorerIcon from '../icons/icons8-文件夹-40.png';
@@ -226,13 +229,20 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         setTerminalCommand('');
 
         try {
+            // 通知开始编译
+            if (activeFile) {
+                collaborationService.startCompilation(activeFile, command);
+            }
+
             // 在实际环境中，通过API执行命令
             const response = await axios.post(`${API_BASE_URL}/files/execute`, {
                 command,
-                cwd: activeFile ? path.dirname(activeFile) : undefined
+                cwd: activeFile ? path.dirname(activeFile) : undefined,
+                filePath: activeFile,
+                userId: collaborationService.getUserId()
             });
 
-            const { stdout, stderr, code } = response.data;
+            const { stdout, stderr, code, compilationKey } = response.data;
 
             if (stdout) {
                 setTerminalOutput(prev => [...prev, ...stdout.split('\n').filter(Boolean)]);
@@ -242,7 +252,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                 setTerminalOutput(prev => [...prev, ...stderr.split('\n').filter(Boolean)]);
             }
 
-            setTerminalOutput(prev => [...prev, `命令执行完成，退出代码: ${code}`]);
+            setTerminalOutput(prev => [...prev, `命令执行完成，退出代码: ${code} (编译ID: ${compilationKey})`]);
         } catch (error) {
             console.error('执行命令失败:', error);
             setTerminalOutput(prev => [...prev, `错误: 执行命令失败`]);
@@ -253,6 +263,36 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
             terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
         }
     };
+
+    // 监听协作编译事件
+    useEffect(() => {
+        const handleCompilationStarted = (event: any) => {
+            if (event.userId !== collaborationService.getUserId()) {
+                setTerminalOutput(prev => [...prev, `🔄 用户 ${event.userId} 开始编译 ${event.filePath.split('/').pop()}`]);
+            }
+        };
+
+        const handleCompilationCompleted = (event: any) => {
+            if (event.userId !== collaborationService.getUserId()) {
+                const duration = ((event.endTime - event.startTime) / 1000).toFixed(1);
+                setTerminalOutput(prev => [...prev, `✅ 用户 ${event.userId} 编译完成 ${event.filePath.split('/').pop()} (${duration}s)`]);
+            }
+        };
+
+        collaborationService.onCompilationStarted(handleCompilationStarted);
+        collaborationService.onCompilationCompleted(handleCompilationCompleted);
+
+        return () => {
+            // 清理监听器在组件卸载时
+        };
+    }, []);
+
+    // 当切换文件时，加入对应的编译房间
+    useEffect(() => {
+        if (activeFile) {
+            collaborationService.joinCompilationRoom(activeFile);
+        }
+    }, [activeFile]);
 
     // 编译当前文件
     const compileCurrentFile = async () => {
@@ -429,8 +469,21 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         }
     };
 
-    // 编辑器内容变化处理
+    // 添加协作状态
+    const [collaborators, setCollaborators] = useState<CollaborationUser[]>([]);
+    const [isCollaborating, setIsCollaborating] = useState(false);
+
+    // 添加防止循环更新的标志
+    const [isReceivingRemoteChange, setIsReceivingRemoteChange] = useState(false);
+    const [lastRemoteChangeTime, setLastRemoteChangeTime] = useState(0);
+
+    // 编辑器内容变化处理 - 修改以支持协作
     const handleEditorChange = (value: string | undefined) => {
+        // 如果正在接收远程变更，不要发送协作更新
+        if (isReceivingRemoteChange) {
+            return;
+        }
+
         const newValue = value || '';
         setEditorContent(newValue);
 
@@ -440,6 +493,232 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                 ...prev,
                 [activeFile]: newValue
             }));
+
+            // 发送协作更新（防抖处理）
+            if (isCollaborating && !isReceivingRemoteChange) {
+                // 添加时间戳检查，避免在刚收到远程更新后立即发送
+                const now = Date.now();
+                if (now - lastRemoteChangeTime > 500) {
+                    debouncedSendContentChange(newValue);
+                }
+            }
+        }
+
+        // 调用外部onChange回调（如果存在）
+        if (onChange) {
+            onChange(newValue);
+        }
+    };
+
+    // 防抖发送内容变更
+    const debouncedSendContentChange = useCallback(
+        debounce((content: string) => {
+            if (!isReceivingRemoteChange && activeFile) {
+                collaborationService.sendContentChange(content);
+            }
+        }, 500), // 增加防抖时间到500ms
+        [isReceivingRemoteChange, activeFile]
+    );
+
+    // 处理协作内容更新
+    useEffect(() => {
+        const handleContentChange = (change: FileChange) => {
+            // 只处理当前活动文件的变更，且不是自己发送的
+            if (change.filePath === activeFile &&
+                change.userId !== collaborationService.getCurrentUser().userId) {
+
+                // 设置接收远程变更标志
+                setIsReceivingRemoteChange(true);
+                setLastRemoteChangeTime(Date.now());
+
+                // 获取当前光标位置
+                const currentPosition = editorRef.current?.getPosition();
+                const currentSelection = editorRef.current?.getSelection();
+
+                // 更新状态
+                setEditorContent(change.content);
+                setFileContents(prev => ({
+                    ...prev,
+                    [activeFile]: change.content
+                }));
+
+                // 延迟更新编辑器内容，避免干扰用户输入
+                setTimeout(() => {
+                    if (editorRef.current) {
+                        // 检查内容是否真的不同，避免不必要的更新
+                        const currentEditorContent = editorRef.current.getValue();
+                        if (currentEditorContent !== change.content) {
+                            // 保存当前光标和选择状态
+                            const positionToRestore = currentPosition || editorRef.current.getPosition();
+                            const selectionToRestore = currentSelection || editorRef.current.getSelection();
+
+                            // 更新内容
+                            editorRef.current.setValue(change.content);
+
+                            // 尝试恢复光标位置
+                            if (positionToRestore) {
+                                try {
+                                    // 确保位置在有效范围内
+                                    const model = editorRef.current.getModel();
+                                    if (model) {
+                                        const lineCount = model.getLineCount();
+                                        const maxLine = Math.min(positionToRestore.lineNumber, lineCount);
+                                        const lineLength = model.getLineLength(maxLine);
+                                        const maxColumn = Math.min(positionToRestore.column, lineLength + 1);
+
+                                        editorRef.current.setPosition({
+                                            lineNumber: maxLine,
+                                            column: maxColumn
+                                        });
+                                    }
+                                } catch (error) {
+                                    console.warn('无法恢复光标位置:', error);
+                                }
+                            }
+
+                            // 尝试恢复选择
+                            if (selectionToRestore) {
+                                try {
+                                    editorRef.current.setSelection(selectionToRestore);
+                                } catch (error) {
+                                    console.warn('无法恢复选择状态:', error);
+                                }
+                            }
+                        }
+                    }
+
+                    // 清除接收远程变更标志
+                    setIsReceivingRemoteChange(false);
+                }, 100); // 延迟100ms执行
+            }
+        };
+
+        const handleCollaboratorsUpdate = (newCollaborators: CollaborationUser[]) => {
+            setCollaborators(newCollaborators);
+            setIsCollaborating(newCollaborators.length > 1);
+        };
+
+        // 注册事件监听器
+        collaborationService.onContentChange(handleContentChange);
+        collaborationService.onCollaboratorsUpdate(handleCollaboratorsUpdate);
+
+        return () => {
+            // 清理监听器
+            // 注意：这里需要移除特定的监听器，但当前的collaborationService可能没有提供这个功能
+            // 作为临时解决方案，我们依赖组件卸载时的清理
+        };
+    }, [activeFile]);
+
+    // 改进光标位置同步
+    useEffect(() => {
+        if (!editorRef.current || !activeFile || !isCollaborating) return;
+
+        const editor = editorRef.current;
+
+        // 监听光标位置变化
+        const handleCursorPositionChange = debounce(() => {
+            if (!isReceivingRemoteChange) {
+                const position = editor.getPosition();
+                const selection = editor.getSelection();
+
+                if (position) {
+                    collaborationService.sendCursorPosition(position, selection);
+                }
+            }
+        }, 200);
+
+        // 添加光标位置变化监听器
+        const disposable = editor.onDidChangeCursorPosition(handleCursorPositionChange);
+
+        return () => {
+            disposable.dispose();
+        };
+    }, [activeFile, isCollaborating, isReceivingRemoteChange]);
+
+    // 当切换文件时加入协作 - 改进版本
+    useEffect(() => {
+        if (activeFile) {
+            // 重置状态
+            setIsReceivingRemoteChange(false);
+            setLastRemoteChangeTime(0);
+
+            // 加入协作
+            collaborationService.joinFileCollaboration(activeFile);
+        }
+
+        return () => {
+            if (activeFile) {
+                collaborationService.leaveFileCollaboration();
+            }
+        };
+    }, [activeFile]);
+
+    // 添加用户输入检测，防止在用户快速输入时同步
+    const [isUserTyping, setIsUserTyping] = useState(false);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        if (!editorRef.current) return;
+
+        const editor = editorRef.current;
+
+        // 监听键盘输入
+        const handleKeyDown = () => {
+            setIsUserTyping(true);
+
+            // 清除之前的超时
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+
+            // 设置新的超时，1秒后认为用户停止输入
+            typingTimeoutRef.current = setTimeout(() => {
+                setIsUserTyping(false);
+            }, 1000);
+        };
+
+        // 添加键盘事件监听器
+        const disposable = editor.onKeyDown(handleKeyDown);
+
+        return () => {
+            disposable.dispose();
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    // 修改防抖函数，考虑用户输入状态
+    const smartDebouncedSendContentChange = useCallback(
+        debounce((content: string) => {
+            if (!isReceivingRemoteChange && !isUserTyping && activeFile) {
+                collaborationService.sendContentChange(content);
+            }
+        }, 800), // 进一步增加防抖时间
+        [isReceivingRemoteChange, isUserTyping, activeFile]
+    );
+
+    // 使用智能防抖函数替换原来的防抖函数
+    const handleEditorChangeImproved = (value: string | undefined) => {
+        // 如果正在接收远程变更，不要处理
+        if (isReceivingRemoteChange) {
+            return;
+        }
+
+        const newValue = value || '';
+        setEditorContent(newValue);
+
+        // 更新当前活动文件的内容
+        if (activeFile) {
+            setFileContents(prev => ({
+                ...prev,
+                [activeFile]: newValue
+            }));
+
+            // 使用智能防抖发送协作更新
+            if (isCollaborating) {
+                smartDebouncedSendContentChange(newValue);
+            }
         }
 
         // 调用外部onChange回调（如果存在）
@@ -904,7 +1183,49 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                     width={aiPanelWidth}
                     onResize={handleAIPanelResize}
                 />
+
+                {/* 添加编译状态组件 */}
+                <CompilationStatus currentFile={activeFile} />
             </div>
+
+            <div className="editor-content">
+                <Editor
+                    height="100%"
+                    language={editorLanguage}
+                    value={editorContent}
+                    theme={theme}
+                    onChange={handleEditorChangeImproved} // 使用改进的处理函数
+                    onMount={handleEditorDidMount}
+                    options={{
+                        minimap: { enabled: true },
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true,
+                        fontFamily: 'JetBrains Mono, Consolas, Monaco, monospace',
+                        fontSize: 14,
+                        // 添加这些选项来改善协作体验
+                        renderWhitespace: 'selection',
+                        smoothScrolling: true,
+                        cursorSmoothCaretAnimation: 'on'
+                    }}
+                />
+            </div>
+
+            {/* 协作状态指示器 */}
+            {isCollaborating && (
+                <div className="collaboration-indicator">
+                    <div className="collaborators-list">
+                        <span className="collaboration-status">
+                            {isUserTyping && "✏️ "}{isReceivingRemoteChange && "📥 "}
+                            协作中 ({collaborators.length}人):
+                        </span>
+                        {collaborators.map(user => (
+                            <span key={user.userId} className="collaborator-badge">
+                                {user.userName}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* 指示器显示当前正在拖动的覆盖层 */}
             {(isDraggingSidebar || isDraggingPanel || isDraggingActivityBar) && (

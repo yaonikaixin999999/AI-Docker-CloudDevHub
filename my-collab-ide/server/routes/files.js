@@ -93,7 +93,8 @@ router.post('/save', express.text({ limit: '10mb' }), async (req, res) => {
 // 执行命令（编译/运行代码等）
 router.post('/execute', async (req, res) => {
     try {
-        const { command, cwd } = req.body;
+        const { command, cwd, filePath, userId } = req.body;
+        const io = req.io;
 
         if (!command) {
             return res.status(400).json({ error: '请提供要执行的命令' });
@@ -108,10 +109,47 @@ router.post('/execute', async (req, res) => {
             ? `cd ${cwd} && ${command}`
             : `cd ${BASE_DIR} && ${command}`;
 
+        // 生成编译任务ID
+        const compilationKey = `${filePath || 'unknown'}-${Date.now()}-${userId || 'anonymous'}`;
+
+        // 通知开始编译
+        if (io && filePath) {
+            io.to(`compilation-${filePath}`).emit('compilation-started', {
+                compilationKey,
+                filePath,
+                command: fullCommand,
+                userId,
+                startTime: Date.now()
+            });
+        }
+
         const result = await sshService.executeCommand(fullCommand);
-        res.json(result);
+
+        // 通知编译完成
+        if (io && filePath) {
+            io.to(`compilation-${filePath}`).emit('compilation-completed', {
+                compilationKey,
+                filePath,
+                command: fullCommand,
+                userId,
+                result,
+                endTime: Date.now()
+            });
+        }
+
+        res.json({ ...result, compilationKey });
     } catch (error) {
         console.error('执行命令失败:', error);
+
+        // 通知编译失败
+        if (req.io && req.body.filePath) {
+            req.io.to(`compilation-${req.body.filePath}`).emit('compilation-failed', {
+                filePath: req.body.filePath,
+                error: error.message,
+                userId: req.body.userId
+            });
+        }
+
         res.status(500).json({ error: '执行命令失败' });
     }
 });
