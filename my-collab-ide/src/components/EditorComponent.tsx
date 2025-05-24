@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
-import Editor, { OnMount } from '@monaco-editor/react';
+import React, { useRef, useState, useEffect, useCallback } from 'react'; // 在这里添加 useCallback
+import Editor, { type OnMount } from '@monaco-editor/react';
 import { editor } from 'monaco-editor';
 import path from 'path-browserify';
 import './EditorComponent.css';
@@ -9,6 +9,7 @@ import FileExplorer from './FileExplorer';
 import RunAndDebug from './RunAndDebug';
 import Search from './Search'
 import axios from 'axios';
+import _ from 'lodash'; // 新增lodash导入
 
 // 模拟图标导入
 import explorerIcon from '../icons/icons8-文件夹-40.png';
@@ -18,6 +19,9 @@ import debugIcon from '../icons/icons8-播放-40.png';
 import extensionsIcon from '../icons/icons8-用户组-40.png';
 import settingsIcon from '../icons/icons8-设置-40.png';
 
+//协同编辑
+import * as monaco from 'monaco-editor';
+
 interface EditorComponentProps {
     defaultLanguage?: string;
     defaultValue?: string;
@@ -25,21 +29,36 @@ interface EditorComponentProps {
     width?: string | number;
     theme?: string;
     onChange?: (value: string | undefined) => void;
+    onReady?: (editorInstance: monaco.editor.IStandaloneCodeEditor) => void;
+    onFileChange?: (filePath: string, editorInstance: monaco.editor.IStandaloneCodeEditor) => void; // 新增 prop
 }
+
+
 
 const EditorComponent: React.FC<EditorComponentProps> = ({
     defaultLanguage = 'javascript',
     defaultValue = '// 在这里开始编写代码\n',
-    // height = '500px',
-    // width = '100%',
     theme = 'vs',
-    onChange
+    onChange,
+    onReady,
+    onFileChange// 新增 prop
 }) => {
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+    const monacoRef = useRef<typeof editor | null>(null);
     const [editorContent, setEditorContent] = useState<string>(defaultValue);
     const [editorLanguage, setEditorLanguage] = useState<string>(defaultLanguage);
     const [activeFile, setActiveFile] = useState<string>(""); // 当前活动文件路径
     const [activePanelTab, setActivePanelTab] = useState("终端");
+
+
+    const [isFileLoading, setIsFileLoading] = useState(false); // 新增加载状态
+    const debouncedFileChange = useRef<
+    _.DebouncedFunc<(filePath: string, editorInstance: monaco.editor.IStandaloneCodeEditor) => void>
+    >(
+    _.debounce((filePath: string, editorInstance: monaco.editor.IStandaloneCodeEditor) => {
+        if (onFileChange) onFileChange(filePath, editorInstance);
+    }, 300)
+    ).current;
 
     // 拖动状态
     const [isDraggingActivityBar, setIsDraggingActivityBar] = useState(false);
@@ -70,6 +89,8 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
 
     // API基础URL
     const API_BASE_URL = 'http://localhost:3001/api';
+
+
 
     const saveFile = async () => {
         if (!activeFile) {
@@ -165,7 +186,22 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         setActivePanelTab('终端');
         await executeCommand(command);
     };
-
+    const openFile = async (file: FileNode) => {
+        if (isFileLoading) return; // 防止重复点击
+        
+        try {
+          setIsFileLoading(true);
+          setActiveFile(file.path);
+          updateEditorContent(`// 正在加载 ${file.name}...`);
+          
+          // 使用防抖函数
+          if (editorRef.current) {
+            debouncedFileChange(file.path, editorRef.current);
+          }
+        } finally {
+          setIsFileLoading(false);
+        }
+      };
     // 运行当前文件
     const runCurrentFile = async () => {
         if (!activeFile) {
@@ -206,6 +242,12 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         await executeCommand(command);
     };
 
+    useEffect(() => {
+        return () => {
+          debouncedFileChange.cancel();
+        };
+      }, [debouncedFileChange]);
+
     // 添加键盘快捷键支持
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -229,6 +271,8 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [activeFile, editorContent]); // 确保依赖项正确
+
+
 
     // 设置编辑器语言
     const getLanguageFromFileName = (filename: string): string => {
@@ -262,21 +306,28 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
     };
 
     // 更新编辑器内容
-    const updateEditorContent = (content: string) => {
-        setEditorContent(content);
-        if (editorRef.current) {
-            editorRef.current.setValue(content);
-        }
-    };
+    const updateEditorContent = useCallback((content: string) => {
+    if (!isFileLoading) { // 只在非加载状态更新
+      setEditorContent(content);
+      if (editorRef.current) {
+        editorRef.current.setValue(content);
+      }
+    }
+  }, [isFileLoading]);
 
-    // 当活动文件变化时，更新编辑器语言
+    // 当活动文件变化时，更新编辑器语言并通知父组件进行协同绑定
     useEffect(() => {
-        if (activeFile) {
+        if (activeFile && editorRef.current) {
             const lang = getLanguageFromFileName(activeFile);
             setEditorLanguage(lang);
             setTerminalOutput(prev => [...prev, `打开文件: ${activeFile}`]);
+
+            // 调用回调以处理新文件的协同绑定
+            if (onFileChange) {
+                onFileChange(activeFile, editorRef.current);
+            }
         }
-    }, [activeFile]);
+    }, [activeFile, onFileChange]);
 
     // 自动滚动终端到底部
     useEffect(() => {
@@ -285,9 +336,9 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         }
     }, [terminalOutput]);
 
-    const handleEditorDidMount: OnMount = (editor) => {
-        editorRef.current = editor;
-        editor.focus();
+    const handleEditorDidMount = (editorInstance: monaco.editor.IStandaloneCodeEditor) => {
+        editorRef.current = editorInstance;
+        onReady?.(editorInstance); // 确保调用 onReady 回调
     };
 
     const handleEditorChange = (value: string | undefined) => {
@@ -562,7 +613,18 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
                             <div className="editor-tabs">
                                 <div className="editor-tab active">
                                     {activeFile ? activeFile.split('/').pop() : "未打开文件"}
+                                    {isFileLoading && (
+                                        <span className="loading-indicator" style={{ marginLeft: 8 }}>
+                                        <div className="spinner"></div>
+                                        </span>
+                                    )}
                                 </div>
+                                {isFileLoading && (
+                                    <div className="file-loading-overlay">
+                                    <div className="loading-spinner"></div>
+                                    <div className="loading-text">正在加载文件...</div>
+                                    </div>
+                                )}
                                 {activeFile && (
                                     <div className="editor-actions" style={{ display: 'flex', marginLeft: 'auto' }}>
                                         <div
@@ -762,5 +824,6 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
         </div>
     );
 };
+
 
 export default EditorComponent;

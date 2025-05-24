@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // 导入 useCallback
 import './App.css';
-import EditorComponent from './components/EditorComponent';
+import CollaborativeEditor from './components/CollaborativeEditor'; // 引入协同编辑组件
 import { apiKeyService } from './services/apiKeyService';
 import { aiService } from './services/aiService';
 
 function App() {
-  const [code, setCode] = useState<string | undefined>("console.log('Hello, World!');");
-  // const [isApiKeySet, setIsApiKeySet] = useState(false);
+  // 现在，这里的 `code` 状态表示由 CollaborativeEditor 组件管理的 *当前激活文件* 的内容。
+  const [code, setCode] = useState<string | undefined>("// Select a file to start coding\\n");
   const [, setIsApiKeySet] = useState(false);
 
   useEffect(() => {
@@ -63,17 +63,20 @@ function App() {
     }
   }, []);
 
-  const handleCodeChange = (code: string | undefined) => {
+  // 使用 useCallback 包装 handleCodeChange，确保其引用稳定
+  const handleCodeChange = useCallback((code: string | undefined) => {
     setCode(code);
-    console.log('Code changed:', code);
-  };
+    console.log('Code changed (from CollaborativeEditor):', code);
+  }, []); // 空依赖数组表示此函数只创建一次
 
   return (
     <div className="app-full-page">
-      <EditorComponent
-        onChange={handleCodeChange}
-        defaultLanguage="typescript"
-        defaultValue={code}
+      <CollaborativeEditor
+        onChange={handleCodeChange} // 传入稳定的函数引用
+        defaultValue="// Select a file to start coding\\n"
+        // 移除 editorContent 和 setEditorContent，它们是多余的且会导致类型错误
+        // editorContent={code || ""}
+        // setEditorContent={setCode}
       />
     </div>
   );
