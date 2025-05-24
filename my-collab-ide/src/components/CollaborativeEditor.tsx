@@ -178,8 +178,6 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
             return 'css';
         case 'md':
             return 'markdown';
-        case 'json':
-            return 'json';
         default:
             return 'plaintext';
     }
