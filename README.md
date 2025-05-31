@@ -107,9 +107,6 @@ SSH_PASSWORD=your-password
 BASE_DIR=/data/My_Desktop/User_Coding
 PORT=3001
 
-# AI 模型配置 (可选)
-LOCAL_MODEL_URL=http://192.168.31.124:1234/v1
-```
 
 ### 3. 本地开发
 ```bash
@@ -143,10 +140,6 @@ docker run -d \
   -e SSH_PASSWORD=your-password \
   clouddevhub
 ```
-
-### 5. 访问应用
-- Web IDE: http://localhost
-- API 服务: http://localhost:3001
 
 ## 🔧 功能使用
 
@@ -220,12 +213,7 @@ docker run -d \
 4. 推送到分支
 5. 创建 Pull Request
 
-## 📄 许可证
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
 
 ## 📞 联系我们
 - 项目维护者: 杜旭、张新明
-- 技术支持: [GitHub Issues](link-to-issues)
-
 ---
-**CloudDevHub** - 让云端开发更简单、更智能、更协作！
